@@ -1,0 +1,370 @@
+{# templates/face_travel/index.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Face·Voyage — L'IA lit votre âme</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080a0f; --surface:#0e1118; --border:rgba(255,255,255,0.07);
+  --gold:#d4a853; --gold-dim:rgba(212,168,83,0.15);
+  --white:#f0ece3; --muted:rgba(240,236,227,0.35); --accent:#7ec8c8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--white);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden;cursor:crosshair;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(126,200,200,0.04) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 90%,rgba(212,168,83,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;z-index:0;pointer-events:none;}
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.5rem 3rem;border-bottom:1px solid var(--border);}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;letter-spacing:0.05em;}
+.logo b{color:var(--gold);font-weight:600;}
+.header-badge{font-size:0.6rem;letter-spacing:0.2em;padding:0.3rem 0.75rem;border:1px solid var(--border);color:var(--muted);text-transform:uppercase;}
+.main{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 73px);}
+.left-panel{padding:4rem 3rem;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;gap:2.5rem;}
+.tag-line{font-size:0.65rem;letter-spacing:0.25em;color:var(--accent);text-transform:uppercase;display:flex;align-items:center;gap:1rem;}
+.tag-line::after{content:'';flex:1;height:1px;background:var(--accent);opacity:0.3;max-width:3rem;}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.8rem,4.5vw,4.5rem);font-weight:300;line-height:1.05;letter-spacing:-0.02em;}
+h1 em{color:var(--gold);font-style:italic;}
+.desc{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;line-height:1.8;color:rgba(240,236,227,0.7);max-width:400px;}
+.btn-scan{display:inline-flex;align-items:center;gap:1.25rem;background:transparent;border:1px solid var(--gold);color:var(--gold);padding:1rem 2rem;font-family:'Space Mono',monospace;font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;cursor:crosshair;transition:all 0.4s;position:relative;overflow:hidden;width:fit-content;}
+.btn-scan::before{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleY(0);transform-origin:bottom;transition:transform 0.4s cubic-bezier(0.23,1,0.32,1);z-index:0;}
+.btn-scan:hover::before{transform:scaleY(1);}
+.btn-scan:hover{color:var(--bg);}
+.btn-scan>*{position:relative;z-index:1;}
+.btn-icon{width:28px;height:28px;border:1.5px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;animation:rotate-slow 8s linear infinite;}
+@keyframes rotate-slow{to{transform:rotate(360deg);}}
+.mood-scroll{display:flex;flex-direction:column;gap:0.4rem;opacity:0.4;}
+.mood-row{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:0.75rem;}
+.mood-row::before{content:'→';color:var(--gold);font-size:0.7rem;}
+.right-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem;position:relative;gap:2rem;}
+.camera-wrap{position:relative;width:min(380px,90%);aspect-ratio:3/4;}
+.camera-border{position:absolute;inset:-2px;pointer-events:none;z-index:10;}
+.camera-border svg{width:100%;height:100%;}
+.border-path{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-dasharray:600;stroke-dashoffset:600;transition:stroke-dashoffset 2s ease;}
+.border-path.active{stroke-dashoffset:0;}
+.corner{position:absolute;width:20px;height:20px;border-color:var(--accent);border-style:solid;z-index:11;}
+.corner.tl{top:-2px;left:-2px;border-width:2px 0 0 2px;}
+.corner.tr{top:-2px;right:-2px;border-width:2px 2px 0 0;}
+.corner.bl{bottom:-2px;left:-2px;border-width:0 0 2px 2px;}
+.corner.br{bottom:-2px;right:-2px;border-width:0 2px 2px 0;}
+.camera-inner{width:100%;height:100%;background:var(--surface);border:1px solid var(--border);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
+#videoEl{width:100%;height:100%;object-fit:cover;display:none;filter:grayscale(0.2) contrast(1.1);transform:scaleX(-1);}
+.cam-placeholder{display:flex;flex-direction:column;align-items:center;gap:1.5rem;cursor:crosshair;}
+.cam-icon{width:72px;height:72px;position:relative;display:flex;align-items:center;justify-content:center;}
+.cam-icon::before,.cam-icon::after{content:'';position:absolute;border-radius:50%;border:1px solid rgba(212,168,83,0.2);animation:ripple 3s ease-out infinite;}
+.cam-icon::before{inset:-12px;animation-delay:0s;}
+.cam-icon::after{inset:-24px;animation-delay:1s;}
+@keyframes ripple{0%{opacity:0.8;transform:scale(0.9);}100%{opacity:0;transform:scale(1.2);}}
+.cam-icon-inner{width:52px;height:52px;border:1.5px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.4rem;}
+.cam-text{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);text-align:center;}
+.scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(to right,transparent 0%,var(--accent) 50%,transparent 100%);box-shadow:0 0 15px var(--accent);animation:scan 2s ease-in-out infinite;display:none;pointer-events:none;z-index:20;}
+@keyframes scan{0%{top:0;opacity:0;}5%{opacity:1;}95%{opacity:1;}100%{top:100%;opacity:0;}}
+.detect-dots{position:absolute;inset:0;display:none;pointer-events:none;z-index:15;}
+.detect-dot{position:absolute;width:4px;height:4px;background:var(--accent);border-radius:50%;box-shadow:0 0 6px var(--accent);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.loading-layer{position:absolute;inset:0;background:rgba(8,10,15,0.92);display:none;z-index:25;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.loading-ring{width:48px;height:48px;border:1px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-txt{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);}
+.status-bar{font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:0.5rem;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);transition:background 0.3s;}
+.status-dot.active{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+.status-dot.gold{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+.error-msg{display:none;background:rgba(196,87,42,0.1);border:1px solid rgba(196,87,42,0.3);padding:1rem 1.25rem;font-size:0.72rem;line-height:1.6;color:rgba(240,236,227,0.7);max-width:380px;text-align:center;}
+/* RESULT */
+.result-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(8,10,15,0.97);align-items:center;justify-content:center;padding:2rem;animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.result-container{max-width:900px;width:100%;border:1px solid var(--border);background:var(--surface);position:relative;animation:slideUp 0.6s cubic-bezier(0.16,1,0.3,1);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.result-header{padding:2rem 2.5rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+.mood-block{display:flex;flex-direction:column;gap:0.5rem;}
+.mood-label{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);}
+.mood-value{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;display:flex;align-items:center;gap:0.75rem;}
+.mood-conf{font-size:0.6rem;letter-spacing:0.1em;color:var(--muted);}
+.close-btn{background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;flex-shrink:0;}
+.close-btn:hover{border-color:var(--white);color:var(--white);}
+.result-body{flex:1;overflow-y:auto;padding:2.5rem;display:flex;flex-direction:column;gap:2rem;}
+.ai-thinking{display:flex;flex-direction:column;gap:1rem;align-items:center;padding:3rem;}
+.thinking-dots{display:flex;gap:0.5rem;}
+.thinking-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:thinking 1.4s ease-in-out infinite;}
+.thinking-dot:nth-child(2){animation-delay:0.2s;}
+.thinking-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes thinking{0%,100%{transform:translateY(0);opacity:0.3;}50%{transform:translateY(-8px);opacity:1;}}
+.thinking-label{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);}
+.dest-primary{border:1px solid var(--gold-dim);padding:2rem;position:relative;overflow:hidden;background:rgba(212,168,83,0.03);}
+.dest-primary::before{content:'★';position:absolute;top:1.5rem;right:1.5rem;color:var(--gold);opacity:0.3;font-size:1rem;}
+.dest-primary-label{font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;}
+.gem-badge{font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;padding:0.2rem 0.6rem;border:1px solid var(--accent);color:var(--accent);margin-left:1rem;}
+.dest-city{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:300;line-height:1;margin-bottom:0.25rem;}
+.dest-country{font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1.5rem;}
+.dest-description{font-family:'Cormorant Garamond',serif;font-size:1.05rem;line-height:1.8;font-weight:300;color:rgba(240,236,227,0.8);border-left:2px solid var(--gold);padding-left:1.25rem;margin-bottom:1.5rem;}
+.dest-tags{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;}
+.dest-tag{font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.25rem 0.7rem;border:1px solid var(--border);color:var(--muted);}
+.dest-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;padding-top:1.25rem;border-top:1px solid var(--border);}
+.meta-item{display:flex;flex-direction:column;gap:0.25rem;}
+.meta-label{font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);}
+.meta-value{font-size:0.85rem;color:var(--white);}
+.alts-section{display:flex;flex-direction:column;gap:1rem;}
+.alts-label{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);}
+.alts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;}
+.alt-card{border:1px solid var(--border);padding:1.25rem;transition:all 0.25s;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:0.25rem;}
+.alt-card::before{content:'';position:absolute;inset:0;background:var(--gold-dim);opacity:0;transition:opacity 0.3s;}
+.alt-card:hover{border-color:rgba(212,168,83,0.4);}
+.alt-card:hover::before{opacity:1;}
+.alt-flag{font-size:1.5rem;margin-bottom:0.25rem;}
+.alt-city{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;}
+.alt-country{font-size:0.62rem;color:var(--muted);letter-spacing:0.08em;}
+.alt-reason{font-size:0.65rem;color:var(--muted);line-height:1.5;margin-top:0.5rem;}
+.result-actions{padding:1.5rem 2.5rem;border-top:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-book{flex:1;min-width:200px;background:var(--gold);color:var(--bg);border:none;padding:0.9rem 1.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
+.btn-book:hover{opacity:0.85;}
+.btn-retry{background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.9rem 1.5rem;font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-retry:hover{border-color:var(--white);color:var(--white);}
+@media(max-width:768px){.main{grid-template-columns:1fr;}.left-panel{border-right:none;border-bottom:1px solid var(--border);padding:2.5rem 1.5rem;}header{padding:1.25rem 1.5rem;}.right-panel{padding:2rem 1.5rem;}.result-body{padding:1.5rem;}.result-header{padding:1.5rem;}.result-actions{padding:1.25rem 1.5rem;}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<header>
+  <div class="logo">Face<b>·</b>Voyage</div>
+  <div class="header-badge">IA · Sans limites</div>
+</header>
+<div class="main">
+  <div class="left-panel">
+    <div class="tag-line">Technologie Face·AI</div>
+    <h1>Votre visage<br>révèle <em>n'importe<br>quelle destination</em></h1>
+    <p class="desc">Notre IA analyse votre expression en temps réel et propose une destination unique parmi tous les pays du monde — sans aucune limite géographique.</p>
+    <button class="btn-scan" onclick="startScan()">
+      <span class="btn-icon">◎</span>
+      <span>Lire mon humeur</span>
+    </button>
+    <div class="mood-scroll">
+      <div class="mood-row">Joyeux → Destination festive surprise</div>
+      <div class="mood-row">Mélancolique → Lieu de contemplation rare</div>
+      <div class="mood-row">Stressé → Refuge naturel insolite</div>
+      <div class="mood-row">Aventurier → Destination hors des sentiers</div>
+      <div class="mood-row">Anxieux → Cocon de sérénité</div>
+      <div class="mood-row">Serein → Exploration à votre rythme</div>
+    </div>
+  </div>
+  <div class="right-panel">
+    <div class="camera-wrap">
+      <div class="camera-border">
+        <svg viewBox="0 0 100 133" preserveAspectRatio="none">
+          <rect x="1" y="1" width="98" height="131" rx="0" class="border-path" id="borderPath"/>
+        </svg>
+      </div>
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <div class="camera-inner">
+        <div class="cam-placeholder" id="placeholder" onclick="startScan()">
+          <div class="cam-icon"><div class="cam-icon-inner">◎</div></div>
+          <div class="cam-text">Cliquez pour activer<br>la caméra</div>
+        </div>
+        <video id="videoEl" autoplay playsinline></video>
+        <div class="scan-line" id="scanLine"></div>
+        <div class="detect-dots" id="detectDots">
+          <div class="detect-dot" style="top:30%;left:35%"></div>
+          <div class="detect-dot" style="top:30%;left:65%"></div>
+          <div class="detect-dot" style="top:45%;left:50%"></div>
+          <div class="detect-dot" style="top:58%;left:40%"></div>
+          <div class="detect-dot" style="top:58%;left:60%"></div>
+        </div>
+        <div class="loading-layer" id="loadingLayer">
+          <div class="loading-ring"></div>
+          <div class="loading-txt" id="loadingTxt">Initialisation…</div>
+        </div>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusTxt">En attente</span>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-container">
+    <div class="result-header">
+      <div class="mood-block">
+        <div class="mood-label">Expression détectée</div>
+        <div class="mood-value" id="rMoodValue">—</div>
+        <div class="mood-conf" id="rMoodConf"></div>
+      </div>
+      <button class="close-btn" onclick="closeResult()">✕</button>
+    </div>
+    <div class="result-body" id="resultBody">
+      <div class="ai-thinking" id="aiThinking">
+        <div class="thinking-dots">
+          <div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>
+        </div>
+        <div class="thinking-label">L'IA cherche votre destination idéale…</div>
+      </div>
+    </div>
+    <div class="result-actions" id="resultActions" style="display:none">
+      <a class="btn-book" id="btnBook" href="#">Réserver cette destination</a>
+      <button class="btn-retry" onclick="closeResult()">Scanner à nouveau</button>
+    </div>
+  </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+// ─── Route Symfony vers le proxy ───
+const SUGGEST_URL = "{{ path('face_travel_suggest') }}";
+const BOOKING_URL = "{{ path('booking', {destination: '__DEST__'}) }}";
+
+const MOODS = {
+  happy:     {fr:'Joyeux / Euphorique',      en:'happy and euphoric',           emoji:'😄', extra:'festive, vibrant, sunny, social energy'},
+  sad:       {fr:'Mélancolique / Nostalgique',en:'melancholic and nostalgic',    emoji:'😔', extra:'contemplative, poetic, quiet, introspective'},
+  angry:     {fr:'Stressé / Tendu',          en:'stressed and tense',           emoji:'😤', extra:'needs nature, silence, disconnection, healing'},
+  surprised: {fr:'Aventurier / Émerveillé',  en:'adventurous and amazed',       emoji:'😲', extra:'curious, thrill-seeking, open to the unexpected'},
+  fearful:   {fr:'Anxieux / Vulnérable',     en:'anxious and vulnerable',       emoji:'😰', extra:'needs safety, beauty, gentle pace, cozy retreat'},
+  disgusted: {fr:'Las / En quête de rupture',en:'weary and craving total change',emoji:'🙄', extra:'maximum exoticism, total break from routine'},
+  neutral:   {fr:'Serein / Équilibré',       en:'serene and balanced',          emoji:'😐', extra:'open-minded, curious, calm explorer, no rush'}
+};
+
+let stream=null, modelsLoaded=false, scanning=false, currentCity='';
+
+function setStatus(txt,type='idle'){
+  document.getElementById('statusTxt').textContent=txt;
+  const d=document.getElementById('statusDot');
+  d.className='status-dot'+(type==='active'?' active':type==='gold'?' gold':'');
+}
+function showLoading(txt){document.getElementById('loadingTxt').textContent=txt;document.getElementById('loadingLayer').style.display='flex';}
+function hideLoading(){document.getElementById('loadingLayer').style.display='none';}
+function showError(msg){const e=document.getElementById('errorMsg');e.textContent=msg;e.style.display='block';setStatus('Erreur');stopCamera();}
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function startScan(){
+  if(scanning)return;
+  scanning=true;
+  document.getElementById('errorMsg').style.display='none';
+  setStatus('Chargement des modèles…','active');
+  try{
+    let w=0;
+    while(typeof faceapi==='undefined'&&w<6000){await delay(200);w+=200;}
+    if(typeof faceapi==='undefined')throw new Error('face-api.js non chargé');
+    if(!modelsLoaded){
+      showLoading('Chargement IA locale…');
+      const M='/face-models';
+      await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(M),faceapi.nets.faceExpressionNet.loadFromUri(M)]);
+      modelsLoaded=true; hideLoading();
+    }
+    setStatus('Activation caméra…','active');
+    showLoading('Activation caméra…');
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+    const video=document.getElementById('videoEl');
+    video.srcObject=stream; video.style.display='block';
+    document.getElementById('placeholder').style.display='none';
+    hideLoading();
+    await new Promise(r=>{video.onloadeddata=r;});
+    document.getElementById('borderPath').classList.add('active');
+    document.getElementById('scanLine').style.display='block';
+    setStatus('Regardez la caméra…','active');
+    await delay(2800);
+    document.getElementById('detectDots').style.display='block';
+    setStatus('Analyse de l\'expression…','gold');
+    showLoading('Lecture de votre visage…');
+    await delay(1200);
+    const detection=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:320})).withFaceExpressions();
+    stopCamera();
+    if(!detection){showError('Aucun visage détecté. Assurez-vous d\'être bien éclairé, face à la caméra.');return;}
+    const expressions=detection.expressions;
+    const dominant=Object.entries(expressions).reduce((a,b)=>a[1]>b[1]?a:b);
+    openResultPanel(dominant[0],Math.round(dominant[1]*100));
+  }catch(err){
+    stopCamera();
+    if(err.name==='NotAllowedError')showError('Accès caméra refusé. Autorisez la caméra dans votre navigateur.');
+    else showError('Erreur : '+err.message);
+  }
+}
+
+function stopCamera(){
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  document.getElementById('videoEl').style.display='none';
+  document.getElementById('scanLine').style.display='none';
+  document.getElementById('detectDots').style.display='none';
+  document.getElementById('borderPath').classList.remove('active');
+  hideLoading();
+  document.getElementById('placeholder').style.display='flex';
+  setStatus('En attente'); scanning=false;
+}
+
+function openResultPanel(moodKey,confidence){
+  const mood=MOODS[moodKey]||MOODS.neutral;
+  document.getElementById('rMoodValue').textContent=mood.emoji+' '+mood.fr;
+  document.getElementById('rMoodConf').textContent='Confiance : '+confidence+'%';
+  document.getElementById('aiThinking').style.display='flex';
+  document.getElementById('resultActions').style.display='none';
+  const prev=document.getElementById('destCard');if(prev)prev.remove();
+  document.getElementById('resultOverlay').style.display='flex';
+  askServer(moodKey,mood,confidence);
+}
+
+// ── Appel vers le Controller Symfony (pas directement Anthropic) ──
+async function askServer(moodKey,mood,confidence){
+  try{
+    const res=await fetch(SUGGEST_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mood:moodKey,mood_en:mood.en,extra:mood.extra,confidence})
+    });
+    if(!res.ok){const e=await res.json();throw new Error(e.error||'Erreur serveur '+res.status);}
+    const dest=await res.json();
+    currentCity=dest.city;
+    renderDestination(dest);
+  }catch(err){
+    document.getElementById('aiThinking').innerHTML=
+      `<div style="color:rgba(240,236,227,0.5);font-size:0.8rem;text-align:center;padding:2rem;line-height:2">
+        ⚠️ ${err.message}<br>
+        <span style="font-size:0.65rem;opacity:0.6">Vérifiez votre clé API dans .env</span>
+      </div>`;
+  }
+}
+
+function renderDestination(dest){
+  document.getElementById('aiThinking').style.display='none';
+  const card=document.createElement('div');card.id='destCard';
+  const gem=dest.hidden_gem?`<span class="gem-badge">Pépite cachée</span>`:'';
+  const tags=(dest.tags||[]).map(t=>`<span class="dest-tag">${t}</span>`).join('');
+  const alts=(dest.alternatives||[]).map(a=>`
+    <div class="alt-card">
+      <div class="alt-flag">${a.flag}</div>
+      <div class="alt-city">${a.city}</div>
+      <div class="alt-country">${a.country}</div>
+      <div class="alt-reason">${a.reason}</div>
+    </div>`).join('');
+  card.innerHTML=`
+    <div class="dest-primary">
+      <div class="dest-primary-label">Destination recommandée ${gem}</div>
+      <div class="dest-city">${dest.flag} ${dest.city}</div>
+      <div class="dest-country">${dest.country} · ${dest.continent}</div>
+      <p class="dest-description">${dest.description}</p>
+      <div class="dest-tags">${tags}</div>
+      <div class="dest-meta">
+        <div class="meta-item"><span class="meta-label">Budget</span><span class="meta-value">${dest.budget}</span></div>
+        <div class="meta-item"><span class="meta-label">Durée idéale</span><span class="meta-value">${dest.duration}</span></div>
+        <div class="meta-item"><span class="meta-label">Meilleure saison</span><span class="meta-value">${dest.best_season}</span></div>
+        <div class="meta-item"><span class="meta-label">Climat</span><span class="meta-value">${dest.climate}</span></div>
+      </div>
+    </div>
+    <div class="alts-section">
+      <div class="alts-label">Autres suggestions de l'IA</div>
+      <div class="alts-grid">${alts}</div>
+    </div>`;
+  document.getElementById('resultBody').appendChild(card);
+  document.getElementById('resultActions').style.display='flex';
+  const bookUrl=BOOKING_URL.replace('__DEST__',encodeURIComponent(dest.city));
+  document.getElementById('btnBook').href=bookUrl;
+  document.getElementById('btnBook').textContent='Réserver → '+dest.city;
+}
+
+function closeResult(){document.getElementById('resultOverlay').style.display='none';}
+document.getElementById('resultOverlay').addEventListener('click',function(e){if(e.target===this)closeResult();});
+</script>
+</body>
+</html>

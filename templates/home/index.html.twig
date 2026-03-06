@@ -1,0 +1,264 @@
+{% extends 'base_dark.html.twig' %}
+{% block title %}Smart Trip – Agence de Voyage Premium{% endblock %}
+
+{% block body %}
+
+{# ── HERO ── #}
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content fade-in">
+    <div class="hero-badge"><i class="fas fa-star"></i> Agence Premium depuis 2026</div>
+    <h1>Explorez le Monde<br>avec <em>Élégance</em></h1>
+    <p>Des voyages sur mesure, des expériences inoubliables. Laissez-nous vous emmener vers des destinations exceptionnelles soigneusement sélectionnées.</p>
+    <div class="hero-btns">
+      <a href="{{ path('voyage_index') }}" class="btn-primary delay-1"><i class="fas fa-compass"></i> Voir nos voyages</a>
+      <a href="#contact" class="btn-outline-light delay-2"><i class="fas fa-phone"></i> Nous contacter</a>
+    </div>
+  </div>
+
+  {# Barre de recherche — destinations depuis BDD #}
+  <div class="hero-search">
+    <form class="search-box" action="{{ path('destination_index') }}" method="GET">
+      <div class="search-field">
+        <label><i class="fas fa-map-marker-alt"></i> Destination</label>
+        <select name="q">
+          <option value="">Toutes les destinations</option>
+          {% for dest in destinations %}
+            <option value="{{ dest.nom }}">{{ dest.nom }}, {{ dest.pays }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="search-divider"></div>
+      <div class="search-field">
+        <label><i class="fas fa-globe"></i> Pays</label>
+        <select name="pays">
+          <option value="">Tous les pays</option>
+          {% for dest in destinations %}
+            <option value="{{ dest.pays }}">{{ dest.pays }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="search-btn" type="submit">
+        <i class="fas fa-search"></i> Rechercher
+      </button>
+    </form>
+  </div>
+</section>
+
+{# ── DESTINATIONS depuis BDD ── #}
+<section id="destinations">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Explorer</span>
+      <h2 class="section-title">Destinations Populaires</h2>
+      <p class="section-sub">Des endroits magiques sélectionnés par nos experts pour des voyages mémorables.</p>
+    </div>
+    <a href="{{ path('destination_index') }}" class="btn-navy">
+      Voir tout <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <div class="dest-grid">
+    {% for dest in destinations %}
+      <div class="dest-card {% if loop.first %}dest-card-featured{% endif %}">
+        {% set img = dest.firstImage %}
+        <img src="{{ img ?? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80' }}"
+             alt="{{ dest.nom }}" loading="lazy">
+        <div class="dest-overlay">
+          {% if loop.first %}
+            <div class="dest-badge">⭐ Coup de cœur</div>
+          {% elseif dest.codeIata %}
+            <div class="dest-badge">{{ dest.codeIata }}</div>
+          {% endif %}
+          <div class="dest-name">{{ dest.nom }}, {{ dest.pays }}</div>
+          <div class="dest-info">
+            <span style="color:rgba(255,255,255,0.65);font-size:.82rem;">
+              <i class="fas fa-map-marker-alt"></i> {{ dest.pays }}
+            </span>
+            <span class="dest-price">
+              {% if dest.voyages|length > 0 %}
+                À partir de {{ dest.voyages|first.prix|number_format(0,',',' ') }} TND
+              {% else %}
+                Sur devis
+              {% endif %}
+            </span>
+            <a href="{{ path('destination_show', {id: dest.id}) }}" class="dest-action">
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);">
+        <p>Aucune destination disponible.</p>
+        <a href="{{ path('destination_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter une destination</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ── VOYAGES / PACKAGES depuis BDD ── #}
+<section id="packages">
+  <div class="section-header">
+    <div>
+      <span class="section-label" style="color:var(--gold-l)">Nos Formules</span>
+      <h2 class="section-title light">Voyages & Packages</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,0.55)">Tout inclus pour voyager l'esprit serein, du budget au luxe absolu.</p>
+    </div>
+    <a href="{{ path('voyage_index') }}" class="btn-gold">
+      Tous les voyages <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <div class="packages-grid">
+    {% for voyage in voyages %}
+      <div class="pkg-card {% if loop.first %}featured{% endif %}">
+        {% if loop.first %}<div class="pkg-ribbon">⭐ Populaire</div>{% endif %}
+        <div class="pkg-img">
+          <img src="{{ voyage.imagePath ?? 'https://images.unsplash.com/photo-1501179691627-eeaa65ea017c?w=600&q=80' }}"
+               alt="{{ voyage.destinationNom }}" loading="lazy">
+        </div>
+        <div class="pkg-body">
+          <div class="pkg-meta">
+            <span><i class="fas fa-map-marker-alt"></i> {{ voyage.destinationNom }}</span>
+            <span><i class="fas fa-clock"></i> {{ voyage.dureeJours }} jours</span>
+            {% if voyage.paysDepart %}
+              <span><i class="fas fa-plane-departure"></i> {{ voyage.paysDepart }}</span>
+            {% endif %}
+          </div>
+          <div class="pkg-name">{{ voyage.destinationNom }}</div>
+          {% if voyage.description %}
+            <div class="pkg-desc">{{ voyage.description|slice(0,100) }}{% if voyage.description|length > 100 %}...{% endif %}</div>
+          {% endif %}
+          <ul class="pkg-features">
+            <li><i class="fas fa-check-circle"></i> Du {{ voyage.dateDebut|date('d/m/Y') }} au {{ voyage.dateFin|date('d/m/Y') }}</li>
+            <li><i class="fas fa-check-circle"></i> {{ voyage.dureeJours }} jours / {{ voyage.dureeJours - 1 }} nuits</li>
+            {% if voyage.paysDepart %}
+              <li><i class="fas fa-check-circle"></i> Départ depuis {{ voyage.paysDepart }}</li>
+            {% endif %}
+          </ul>
+          <div class="pkg-footer">
+            <div>
+              <div class="pkg-price-label">À partir de</div>
+              <div class="pkg-price">{{ voyage.prix|number_format(0,',',' ') }} <small>TND / pers.</small></div>
+            </div>
+            <a href="{{ path('voyage_show', {id: voyage.id}) }}" class="btn-gold">Voir le voyage</a>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(255,255,255,0.4);">
+        <p>Aucun voyage disponible.</p>
+        <a href="{{ path('voyage_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter un voyage</a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ── À PROPOS ── #}
+<section id="about">
+  <div class="about-img-wrap">
+    <img class="about-img-main" src="https://images.unsplash.com/photo-1578894381163-e72c17f2d45f?w=700&q=80" alt="Notre équipe">
+    <div class="about-img-badge">
+      <strong>16</strong>
+      <span>ans d'expertise</span>
+    </div>
+  </div>
+  <div class="about-content">
+    <span class="section-label">Notre histoire</span>
+    <h2 class="section-title">Votre confiance,<br>notre passion</h2>
+    <p class="section-sub" style="max-width:100%;margin-bottom:1.5rem;">
+      Depuis 2008, notre agence accompagne des milliers de voyageurs dans la réalisation de leurs rêves. Notre équipe de passionnés met tout en œuvre pour créer des expériences de voyage uniques et sur mesure.
+    </p>
+    <div class="about-features">
+      <div class="about-feat">
+        <div class="about-feat-icon"><i class="fas fa-shield-alt"></i></div>
+        <div><h4>Voyages sécurisés</h4><p>Suivi en temps réel et assistance 24h/24 durant votre séjour.</p></div>
+      </div>
+      <div class="about-feat">
+        <div class="about-feat-icon"><i class="fas fa-user-tie"></i></div>
+        <div><h4>Conseillers experts</h4><p>Une équipe dédiée avec une connaissance terrain approfondie.</p></div>
+      </div>
+      <div class="about-feat">
+        <div class="about-feat-icon"><i class="fas fa-tag"></i></div>
+        <div><h4>Meilleur prix garanti</h4><p>Nous alignons tout concurrent sur le même séjour.</p></div>
+      </div>
+      <div class="about-feat">
+        <div class="about-feat-icon"><i class="fas fa-sliders-h"></i></div>
+        <div><h4>100% sur mesure</h4><p>Chaque voyage est conçu selon vos envies et votre budget.</p></div>
+      </div>
+    </div>
+    <a href="#contact" class="btn-primary">Parler à un conseiller <i class="fas fa-arrow-right"></i></a>
+  </div>
+</section>
+
+{# ── CONTACT ── #}
+<section id="contact">
+  <div class="contact-info">
+    <span class="section-label" style="color:var(--gold-l)">Contactez-nous</span>
+    <h2 class="section-title light">Planifions votre<br>voyage ensemble</h2>
+    <p class="section-sub" style="color:rgba(255,255,255,0.55);margin-bottom:0;">
+      Un conseiller dédié vous répond sous 24h pour construire votre voyage idéal.
+    </p>
+    <div class="contact-items">
+      <div class="contact-item">
+        <div class="contact-icon"><i class="fas fa-phone"></i></div>
+        <div><h4>Téléphone</h4><p>+216 71 234 567</p></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+        <div><h4>Email</h4><p>contact@SmartTrip.tn</p></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div><h4>Adresse</h4><p>Avenue Habib Bourguiba, Tunis</p></div>
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon"><i class="fas fa-clock"></i></div>
+        <div><h4>Horaires</h4><p>Lun–Sam : 8h00 – 18h00</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-form">
+    <h3>Demande de devis gratuit</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Prénom</label><input type="text" placeholder="Mohamed"></div>
+      <div class="form-group"><label>Nom</label><input type="text" placeholder="Ben Ali"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" placeholder="email@example.com"></div>
+      <div class="form-group"><label>Téléphone</label><input type="tel" placeholder="+216 ..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Destination souhaitée</label>
+        <select>
+          <option value="">Choisir...</option>
+          {% for dest in destinations %}
+            <option value="{{ dest.id }}">{{ dest.nom }}, {{ dest.pays }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Budget estimé</label>
+        <select>
+          <option>- 500 TND</option>
+          <option>500 – 1 500 TND</option>
+          <option>1 500 – 3 000 TND</option>
+          <option>+ 3 000 TND</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Votre message</label>
+      <textarea placeholder="Décrivez votre voyage idéal, dates, nombre de voyageurs..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="alert('✅ Votre demande a été envoyée ! Un conseiller vous contactera sous 24h.');return false;">
+      <i class="fas fa-paper-plane"></i> Envoyer ma demande
+    </button>
+  </div>
+</section>
+
+{% endblock %}
