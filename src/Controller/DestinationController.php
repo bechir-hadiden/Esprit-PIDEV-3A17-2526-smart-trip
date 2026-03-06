@@ -5,17 +5,16 @@ namespace App\Controller;
 use App\Entity\Destination;
 use App\Form\DestinationType;
 use App\Repository\DestinationRepository;
+use App\Service\QRCodeService;
+use App\Service\YouTubeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-use App\Service\QRCodeService;
-use App\Service\YouTubeService;
 
 #[Route('/destinations', name: 'destination_')]
 class DestinationController extends AbstractController
@@ -23,49 +22,58 @@ class DestinationController extends AbstractController
     public function __construct(
         #[Autowire('%images_directory%')]
         private string $imagesDirectory,
-        #[Autowire(env: 'YOUTUBE_API_KEY')]
-        private string $youtubeApiKey,
-        private HttpClientInterface $httpClient,
     ) {}
 
+    // ── INDEX ──────────────────────────────────────────────────────
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request, DestinationRepository $repo): Response
     {
-        $q = $request->query->get('q');
-        $destinations = $q ? $repo->search($q) : $repo->findWithVoyages();
+        $query = $request->query->get('q', '');
+
+        $destinations = $query
+            ? $repo->createQueryBuilder('d')
+                ->where('d.nom LIKE :q OR d.pays LIKE :q')
+                ->setParameter('q', '%' . $query . '%')
+                ->orderBy('d.order', 'ASC')
+                ->getQuery()->getResult()
+            : $repo->findBy([], ['order' => 'ASC']);
+
         return $this->render('destination/index.html.twig', [
             'destinations' => $destinations,
-            'query'        => $q,
+            'query'        => $query,
         ]);
     }
 
+    // ── NEW ────────────────────────────────────────────────────────
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $em): Response
     {
         $destination = new Destination();
         $form = $this->createForm(DestinationType::class, $destination);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->handleImageUploads($form, $destination, $slugger);
+            // ✅ On lit les fichiers directement depuis $request (pas depuis le form)
+            $this->handleImageUploads($request, $destination);
+
             $em->persist($destination);
             $em->flush();
-            $this->addFlash('success', '✅ Destination « ' . $destination->getNom() . ' » créée !');
-            return $this->redirectToRoute('destination_index');
+
+            $this->addFlash('success', 'Destination « ' . $destination->getNom() . ' » créée avec succès !');
+            return $this->redirectToRoute('destination_show', ['id' => $destination->getId()]);
         }
 
         return $this->render('destination/form.html.twig', [
             'form'        => $form->createView(),
             'destination' => $destination,
             'mode'        => 'new',
-            'youtubeKey'  => $this->youtubeApiKey,
         ]);
     }
 
-    #[Route('/{id}', name: 'show', methods: ['GET'])]
+    // ── SHOW ───────────────────────────────────────────────────────
+    #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Destination $destination, QRCodeService $qrCodeService): Response
     {
-        // Equivalent de QRCodeService.genererQRCodeDestination(id, nomVille, taille) en JavaFX
         $qrCodeUrl = $qrCodeService->genererQRCodeDestination(
             $destination->getId(),
             $destination->getNom() . ' ' . $destination->getPays(),
@@ -78,45 +86,44 @@ class DestinationController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Destination $destination, EntityManagerInterface $em, SluggerInterface $slugger): Response
+    // ── EDIT ───────────────────────────────────────────────────────
+    #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    public function edit(Request $request, Destination $destination, EntityManagerInterface $em): Response
     {
         $form = $this->createForm(DestinationType::class, $destination);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // En mode edit : on garde les images existantes et on ajoute les nouvelles
-            $this->handleImageUploads($form, $destination, $slugger, keepExisting: true);
+            // ✅ On lit les fichiers directement depuis $request (pas depuis le form)
+            $this->handleImageUploads($request, $destination);
+
             $em->flush();
-            $this->addFlash('success', '✅ Destination mise à jour !');
-            return $this->redirectToRoute('destination_index');
+
+            $this->addFlash('success', 'Destination mise à jour avec succès !');
+            return $this->redirectToRoute('destination_show', ['id' => $destination->getId()]);
         }
 
         return $this->render('destination/form.html.twig', [
             'form'        => $form->createView(),
             'destination' => $destination,
             'mode'        => 'edit',
-            'youtubeKey'  => $this->youtubeApiKey,
         ]);
     }
 
-    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
+    // ── DELETE ─────────────────────────────────────────────────────
+    #[Route('/{id}/delete', name: 'delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(Request $request, Destination $destination, EntityManagerInterface $em): Response
     {
         if ($this->isCsrfTokenValid('delete_destination_' . $destination->getId(), $request->request->get('_token'))) {
-            // Supprimer tous les fichiers images du serveur
-            foreach ($destination->getAllImages() as $img) {
-                $path = $this->imagesDirectory . '/' . basename($img);
-                if (file_exists($path)) unlink($path);
-            }
             $em->remove($destination);
             $em->flush();
-            $this->addFlash('success', '🗑️ Destination supprimée.');
+            $this->addFlash('success', 'Destination supprimée.');
         }
+
         return $this->redirectToRoute('destination_index');
     }
 
-    // ── YouTube proxy (utilise YouTubeService) ───────────────────
+    // ── YOUTUBE SEARCH ─────────────────────────────────────────────
     #[Route('/api/youtube-search', name: 'youtube_search', methods: ['GET'])]
     public function youtubeSearch(Request $request, YouTubeService $youtubeService): JsonResponse
     {
@@ -126,40 +133,58 @@ class DestinationController extends AbstractController
         return $this->json($youtubeService->searchVideos($q, 6));
     }
 
+    // ── API LIST (JSON) ────────────────────────────────────────────
     #[Route('/api/list', name: 'api_list', methods: ['GET'])]
     public function apiList(DestinationRepository $repo): JsonResponse
     {
-        $data = array_map(fn(Destination $d) => [
+        $destinations = $repo->findAll();
+        $data = array_map(fn($d) => [
             'id'   => $d->getId(),
             'nom'  => $d->getNom(),
             'pays' => $d->getPays(),
-        ], $repo->findAll());
+        ], $destinations);
+
         return $this->json($data);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────
-    private function handleImageUploads($form, Destination $destination, SluggerInterface $slugger, bool $keepExisting = false): void
+    // ── PRIVATE : upload images depuis $request directement ────────
+    /**
+     * ✅ Lit les fichiers depuis $request->files (pas depuis le form Symfony)
+     * car form_widget génère un input sans [] qui écrase le tableau.
+     * $request->files->get('destination')['imageFiles'] retourne bien
+     * un tableau quand le name HTML est "destination[imageFiles][]"
+     */
+    private function handleImageUploads(Request $request, Destination $destination): void
     {
-        // Garde les images existantes en mode edit
-        $newImages = $keepExisting ? $destination->getAllImages() : [];
+        // Récupère le tableau de fichiers depuis la requête brute
+        $destFiles = $request->files->get('destination');
 
-        // Récupère tous les fichiers uploadés (input multiple)
-        $files = $form->get('imageFiles')->getData();
+        if (!$destFiles || !isset($destFiles['imageFiles'])) {
+            return;
+        }
 
-        // getData() retourne un seul fichier ou un tableau selon le navigateur
-        if ($files && !is_array($files)) {
+        $files = $destFiles['imageFiles'];
+
+        // Normalise en tableau (au cas où un seul fichier)
+        if (!is_array($files)) {
             $files = [$files];
         }
 
-        foreach ((array) $files as $file) {
-            if (!$file) continue;
-            $safe      = $slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
-            $filename  = $safe . '-' . uniqid() . '.' . $file->guessExtension();
-            $file->move($this->imagesDirectory, $filename);
-            $newImages[] = '/uploads/destinations/' . $filename;
-        }
+        foreach ($files as $file) {
+            if (!$file instanceof UploadedFile) continue;
+            if (!$file->isValid()) continue;
 
-        // Sauvegarde tout dans une seule colonne séparée par |
-        $destination->setAllImages($newImages);
+            // Nom unique pour éviter les collisions
+            $filename = uniqid('dest_') . '.' . $file->guessExtension();
+
+            // Déplace dans le dossier uploads
+            $file->move($this->imagesDirectory, $filename);
+
+            // Chemin relatif accessible depuis public/
+            $relativePath = '/uploads/destinations/' . $filename;
+
+            // AJOUTE à la liste existante (ne remplace pas !)
+            $destination->addImage($relativePath);
+        }
     }
 }

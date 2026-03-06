@@ -1,103 +1,181 @@
-{# templates/voyage/form.html.twig #}
-{% extends 'base.html.twig' %}
-{% block title %}{{ mode == 'new' ? 'Nouveau voyage' : 'Modifier ' ~ voyage.titre }}{% endblock %}
+{% extends 'base_dark.html.twig' %}
+{% block title %}{{ voyage.destination }} – VoyageElite{% endblock %}
 
 {% block body %}
-<div class="page-header">
-  <h1>{{ mode == 'new' ? '✈️ Nouveau <span>Voyage</span>' : '✏️ Modifier <span>' ~ voyage.titre ~ '</span>' }}</h1>
-  <a href="{{ path('voyage_index') }}" class="btn btn-outline">← Retour</a>
+
+{# ── PAGE HERO ── #}
+<div style="background:var(--navy);padding:7rem 5% 3rem;border-bottom:1px solid rgba(201,168,76,0.15);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <span class="section-label">Voyage</span>
+      <h1 class="section-title light" style="margin-bottom:.3rem;">{{ voyage.destination }}</h1>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
+        <span style="background:rgba(201,168,76,0.2);color:var(--gold);padding:.2rem .75rem;border-radius:50px;font-size:.75rem;font-weight:700;">
+          {{ voyage.dureeJours }} jours
+        </span>
+        {% if voyage.paysDepart %}
+          <span style="color:rgba(255,255,255,0.5);font-size:.85rem;">
+            <i class="fas fa-plane-departure" style="color:var(--gold);margin-right:.3rem;"></i>{{ voyage.paysDepart }}
+          </span>
+        {% endif %}
+        <span style="color:rgba(255,255,255,0.5);font-size:.85rem;">
+          <i class="fas fa-calendar" style="color:var(--gold);margin-right:.3rem;"></i>
+          {{ voyage.dateDebut|date('d/m/Y') }} → {{ voyage.dateFin|date('d/m/Y') }}
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;">
+      <a href="{{ path('voyage_edit', {id: voyage.id}) }}" class="btn-gold">
+        <i class="fas fa-pen"></i> Modifier
+      </a>
+      <a href="{{ path('voyage_index') }}" class="btn-outline-light" style="padding:.6rem 1.4rem;font-size:.85rem;">
+        <i class="fas fa-arrow-left"></i> Retour
+      </a>
+    </div>
+  </div>
 </div>
 
-{{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
-<div class="form-card">
+{# ── CONTENU ── #}
+<div style="padding:3rem 5%;background:var(--cream);">
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:2rem;align-items:start;">
 
-  <div class="form-group">
-    {{ form_label(form.titre) }}
-    {{ form_widget(form.titre) }}
-    {{ form_errors(form.titre) }}
-  </div>
+    {# ── COLONNE GAUCHE ── #}
+    <div style="display:flex;flex-direction:column;gap:1.4rem;">
 
-  <div class="form-row">
-    <div class="form-group">
-      {{ form_label(form.destination) }}
-      {{ form_widget(form.destination) }}
-      {{ form_errors(form.destination) }}
+      {# Image principale #}
+      {% if voyage.imagePath %}
+        <div style="border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(13,27,42,0.18);">
+          <img src="{{ voyage.imagePath }}" alt="{{ voyage.destination }}"
+               style="width:100%;height:380px;object-fit:cover;">
+        </div>
+      {% else %}
+        <div style="width:100%;height:220px;background:rgba(13,27,42,0.06);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:4rem;color:rgba(13,27,42,0.2);">✈️</div>
+      {% endif %}
+
+      {# Infos détaillées #}
+      <div style="background:var(--white);border-radius:14px;padding:1.6rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;">
+          <i class="fas fa-info-circle" style="color:var(--gold);font-size:.875rem;"></i> Détails du voyage
+        </h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+
+          {#
+            ✅ FIX : pas de \' dans Twig — utiliser la concaténation ~ ou les guillemets doubles
+            pour les chaînes imbriquées dans un objet littéral Twig
+          #}
+          {% set duree    = voyage.dureeJours ~ ' jours / ' ~ (voyage.dureeJours - 1) ~ ' nuits' %}
+          {% set prixText = voyage.prix|number_format(0, ',', ' ') ~ ' TND / pers.' %}
+
+          {% set infos = {
+            'Destination':    voyage.destination,
+            'Pays de départ': voyage.paysDepart ?? '—',
+            'Date de départ': voyage.dateDebut|date('d/m/Y'),
+            'Date de retour': voyage.dateFin|date('d/m/Y'),
+            'Durée':          duree,
+            'Prix':           prixText
+          } %}
+
+          {% for label, value in infos %}
+            <div style="padding:.9rem;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.12);border-radius:10px;">
+              <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;font-weight:600;">{{ label }}</div>
+              <div style="font-weight:600;color:var(--navy);font-size:.875rem;">{{ value }}</div>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      {# Description #}
+      {% if voyage.description %}
+        <div style="background:var(--white);border-radius:14px;padding:1.6rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;">
+            <i class="fas fa-align-left" style="color:var(--gold);font-size:.875rem;"></i> Description
+          </h3>
+          <p style="font-size:.875rem;color:var(--muted);line-height:1.8;">{{ voyage.description }}</p>
+        </div>
+      {% endif %}
+
     </div>
-    <div class="form-group">
-      {{ form_label(form.paysDepart) }}
-      {{ form_widget(form.paysDepart) }}
-      {{ form_errors(form.paysDepart) }}
+
+    {# ── COLONNE DROITE SIDEBAR ── #}
+    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+      {# Prix & Réservation #}
+      <div style="background:var(--navy);border-radius:14px;padding:1.6rem;box-shadow:0 8px 32px rgba(13,27,42,0.2);border:1px solid rgba(201,168,76,0.2);">
+        <p style="font-size:.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;">Prix par personne</p>
+        <div style="font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:var(--gold);line-height:1;margin-bottom:1.2rem;">
+          {{ voyage.prix|number_format(0, ',', ' ') }}
+          <span style="font-size:.9rem;color:rgba(255,255,255,0.5);font-family:'Plus Jakarta Sans',sans-serif;font-weight:400;"> TND</span>
+        </div>
+
+        <div style="border-top:1px solid rgba(201,168,76,0.15);padding-top:1.1rem;margin-bottom:1.1rem;">
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.5rem;">
+            <span style="color:rgba(255,255,255,0.55);">Départ</span>
+            <span style="color:var(--white);font-weight:600;">{{ voyage.dateDebut|date('d/m/Y') }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.5rem;">
+            <span style="color:rgba(255,255,255,0.55);">Retour</span>
+            <span style="color:var(--white);font-weight:600;">{{ voyage.dateFin|date('d/m/Y') }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.8rem;">
+            <span style="color:rgba(255,255,255,0.55);">Durée</span>
+            <span style="color:var(--gold);font-weight:700;">{{ voyage.dureeJours }} jours</span>
+          </div>
+        </div>
+
+        <button onclick="alert('Fonctionnalité de réservation à venir !')"
+                style="width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--navy);border:none;cursor:pointer;padding:1rem;border-radius:10px;font-weight:700;font-size:.95rem;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .3s,box-shadow .3s;"
+                onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 25px rgba(201,168,76,0.4)'"
+                onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+          <i class="fas fa-plane"></i> Réserver maintenant
+        </button>
+      </div>
+
+      {# Destination liée #}
+      {% if voyage.destinationRel %}
+        <div style="background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+          {% set destImg = voyage.destinationRel.firstImage %}
+          {% if destImg %}
+            <img src="{{ destImg }}" alt="{{ voyage.destinationRel.nom }}"
+                 style="width:100%;height:130px;object-fit:cover;">
+          {% endif %}
+          <div style="padding:1.2rem;">
+            <p style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;font-weight:600;">Destination</p>
+            <p style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);font-weight:600;margin-bottom:.25rem;">
+              {{ voyage.destinationRel.nom }}
+            </p>
+            <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;">
+              <i class="fas fa-map-marker-alt" style="color:var(--gold);margin-right:.3rem;"></i>{{ voyage.destinationRel.pays }}
+              {% if voyage.destinationRel.codeIata %}
+                &nbsp;·&nbsp;
+                <span style="background:rgba(201,168,76,0.12);color:var(--gold);padding:.1rem .5rem;border-radius:50px;font-size:.7rem;font-weight:700;">{{ voyage.destinationRel.codeIata }}</span>
+              {% endif %}
+            </p>
+            <a href="{{ path('destination_show', {id: voyage.destinationRel.id}) }}" class="btn-navy" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.82rem;">
+              <i class="fas fa-eye"></i> Voir la destination
+            </a>
+          </div>
+        </div>
+      {% endif %}
+
+      {# Actions admin #}
+      <div style="background:var(--white);border-radius:14px;padding:1.2rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+        <p style="font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem;font-weight:600;">Actions</p>
+        <div style="display:flex;flex-direction:column;gap:.6rem;">
+          <a href="{{ path('voyage_edit', {id: voyage.id}) }}" class="btn-gold" style="justify-content:center;padding:.65rem 1rem;">
+            <i class="fas fa-pen"></i> Modifier ce voyage
+          </a>
+          <form method="POST" action="{{ path('voyage_delete', {id: voyage.id}) }}"
+                onsubmit="return confirm('Supprimer ce voyage définitivement ?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_voyage_' ~ voyage.id) }}">
+            <button type="submit" class="btn-danger-sm" style="width:100%;justify-content:center;padding:.65rem 1rem;font-size:.82rem;">
+              <i class="fas fa-trash"></i> Supprimer
+            </button>
+          </form>
+        </div>
+      </div>
+
     </div>
   </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      {{ form_label(form.dateDebut) }}
-      {{ form_widget(form.dateDebut) }}
-      {{ form_errors(form.dateDebut) }}
-    </div>
-    <div class="form-group">
-      {{ form_label(form.dateFin) }}
-      {{ form_widget(form.dateFin) }}
-      {{ form_errors(form.dateFin) }}
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      {{ form_label(form.prix) }}
-      {{ form_widget(form.prix) }}
-      {{ form_errors(form.prix) }}
-    </div>
-    <div class="form-group">
-      {{ form_label(form.devise) }}
-      {{ form_widget(form.devise) }}
-      {{ form_errors(form.devise) }}
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      {{ form_label(form.statut) }}
-      {{ form_widget(form.statut) }}
-      {{ form_errors(form.statut) }}
-    </div>
-    <div class="form-group">
-      {{ form_label(form.placesTotal) }}
-      {{ form_widget(form.placesTotal) }}
-      {{ form_errors(form.placesTotal) }}
-    </div>
-  </div>
-
-  <div class="form-group">
-    {{ form_label(form.imagePath) }}
-    {{ form_widget(form.imagePath) }}
-    {{ form_errors(form.imagePath) }}
-    {% if voyage.imagePath %}
-      <img src="{{ voyage.imagePath }}" style="margin-top:10px;max-height:100px;border-radius:8px;" alt="preview">
-    {% endif %}
-  </div>
-
-  <div class="form-group form-row full">
-    {{ form_label(form.description) }}
-    {{ form_widget(form.description) }}
-    {{ form_errors(form.description) }}
-  </div>
-
-  <div class="form-group">
-    <label class="checkbox-label">
-      {{ form_widget(form.populaire) }}
-      {{ form_label(form.populaire) }}
-    </label>
-  </div>
-
-  <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
-    <a href="{{ path('voyage_index') }}" class="btn btn-outline">Annuler</a>
-    <button type="submit" class="btn btn-gold">
-      {{ mode == 'new' ? '✅ Créer le voyage' : '💾 Sauvegarder' }}
-    </button>
-  </div>
-
 </div>
-{{ form_end(form) }}
 {% endblock %}

@@ -45,7 +45,9 @@ class VoyageController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($voyage);
             $em->flush();
-            $this->addFlash('success', '✅ Voyage « ' . $voyage->getTitre() . ' » créé avec succès !');
+
+            // ✅ getDestination() et non getTitre() qui n'existe pas
+            $this->addFlash('success', '✅ Voyage « ' . $voyage->getDestination() . ' » créé avec succès !');
             return $this->redirectToRoute('voyage_index');
         }
 

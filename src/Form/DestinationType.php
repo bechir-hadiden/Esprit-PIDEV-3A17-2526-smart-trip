@@ -11,13 +11,12 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Image;
+use Symfony\Component\Validator\Constraints\All;
 
 class DestinationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $imageConstraint = [new Image(['maxSize' => '3M'])];
-
         $builder
             ->add('nom', TextType::class, [
                 'label' => 'Nom de la destination',
@@ -30,34 +29,58 @@ class DestinationType extends AbstractType
             ->add('codeIata', TextType::class, [
                 'label'    => 'Code IATA (3 lettres)',
                 'required' => false,
-                'attr'     => ['placeholder' => 'TUN, CDG...', 'maxlength' => 3, 'style' => 'text-transform:uppercase'],
+                'attr'     => [
+                    'placeholder' => 'TUN, CDG...',
+                    'maxlength'   => 3,
+                    'style'       => 'text-transform:uppercase',
+                ],
             ])
-            // 5 champs upload image
+
+            // ✅ FIX : 'multiple' => true au niveau Symfony (pas seulement dans attr)
+            // Sans cette option, getData() ne retourne qu'un seul fichier !
             ->add('imageFiles', FileType::class, [
                 'label'    => '📷 Images (sélectionnez plusieurs)',
                 'mapped'   => false,
                 'required' => false,
+                'multiple' => true,   // ← LA CLÉ DU FIX
                 'attr'     => [
-                    'accept'   => 'image/*',
-                    'multiple' => 'multiple',   // ← autorise la sélection multiple
+                    'accept' => 'image/*',
+                ],
+                // Contrainte appliquée à chaque fichier du tableau
+                'constraints' => [
+                    new All([
+                        'constraints' => [
+                            new Image(['maxSize' => '3M']),
+                        ],
+                    ]),
                 ],
             ])
-            // YouTube : recherche par mot-clé
+
             ->add('youtubeSearch', TextType::class, [
                 'label'    => '🎬 Rechercher une vidéo YouTube',
                 'mapped'   => false,
                 'required' => false,
-                'attr'     => ['placeholder' => 'Ex: Toulouse city tour, Dubai travel...', 'id' => 'youtubeSearch'],
+                'attr'     => [
+                    'placeholder' => 'Ex: Toulouse city tour, Dubai travel...',
+                    'id'          => 'youtubeSearch',
+                ],
             ])
             ->add('videoUrl', TextType::class, [
                 'label'    => 'ID Vidéo YouTube sélectionnée',
                 'required' => false,
-                'attr'     => ['placeholder' => 'dQw4w9WgXcQ', 'id' => 'videoUrlField', 'readonly' => true],
+                'attr'     => [
+                    'placeholder' => 'dQw4w9WgXcQ',
+                    'id'          => 'videoUrlField',
+                    'readonly'    => true,
+                ],
             ])
             ->add('description', TextareaType::class, [
                 'label'    => 'Description',
                 'required' => false,
-                'attr'     => ['rows' => 4, 'placeholder' => 'Décrivez la destination...'],
+                'attr'     => [
+                    'rows'        => 4,
+                    'placeholder' => 'Décrivez la destination...',
+                ],
             ])
             ->add('order', IntegerType::class, [
                 'label'    => 'Ordre d\'affichage',
