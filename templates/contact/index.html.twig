@@ -1,0 +1,154 @@
+{% extends 'base_dark.html.twig' %}
+{% block title %}Contact – SmartTrip{% endblock %}
+
+{% block body %}
+
+{# ── PAGE HERO ── #}
+<div style="background:var(--navy);padding:7rem 5% 3rem;border-bottom:1px solid rgba(201,168,76,0.15);">
+  <div style="max-width:600px;">
+    <span class="section-label">Contact</span>
+    <h1 class="section-title light">Contactez-nous</h1>
+    <p style="color:rgba(255,255,255,0.55);font-size:.95rem;line-height:1.75;">
+      Une question, une demande de devis ? Notre équipe vous répond sous 24h.
+    </p>
+  </div>
+</div>
+
+{# ── CONTENU ── #}
+<div style="padding:3rem 5%;background:var(--cream);min-height:60vh;">
+  <div style="display:grid;grid-template-columns:1fr 420px;gap:3rem;max-width:1100px;margin:0 auto;align-items:start;">
+
+    {# ── FORMULAIRE ── #}
+    <div>
+
+      {# Flash messages #}
+      {% for msg in app.flashes('success') %}
+        <div style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.4);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;">
+          <span style="font-size:1.3rem;">✅</span>
+          <p style="color:#166534;font-size:.9rem;margin:0;font-weight:500;">{{ msg }}</p>
+        </div>
+      {% endfor %}
+      {% for msg in app.flashes('error') %}
+        <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;">
+          <span style="font-size:1.3rem;">❌</span>
+          <p style="color:#991b1b;font-size:.9rem;margin:0;font-weight:500;">{{ msg }}</p>
+        </div>
+      {% endfor %}
+
+      <div style="background:var(--white);border-radius:16px;padding:2rem;box-shadow:0 4px 20px rgba(13,27,42,0.08);border-top:3px solid var(--gold);">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--navy);margin-bottom:1.6rem;display:flex;align-items:center;gap:.5rem;">
+          <i class="fas fa-paper-plane" style="color:var(--gold);font-size:1rem;"></i> Envoyer un message
+        </h2>
+
+        {{ form_start(form, {attr: {novalidate: 'novalidate', id: 'contactForm'}}) }}
+        <div style="display:flex;flex-direction:column;gap:1.1rem;">
+
+          {# Nom #}
+          <div>
+            {{ form_label(form.nom, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+            {{ form_widget(form.nom, {attr: {
+              style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s;box-sizing:border-box;',
+              onfocus: "this.style.borderColor='var(--gold)'",
+              onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"
+            }}) }}
+            {{ form_errors(form.nom) }}
+          </div>
+
+          {# Email #}
+          <div>
+            {{ form_label(form.email, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+            {{ form_widget(form.email, {attr: {
+              style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s;box-sizing:border-box;',
+              onfocus: "this.style.borderColor='var(--gold)'",
+              onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"
+            }}) }}
+            {{ form_errors(form.email) }}
+          </div>
+
+          {# Sujet #}
+          <div>
+            {{ form_label(form.sujet, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+            {{ form_widget(form.sujet, {attr: {
+              style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s;box-sizing:border-box;',
+              onfocus: "this.style.borderColor='var(--gold)'",
+              onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"
+            }}) }}
+            {{ form_errors(form.sujet) }}
+          </div>
+
+          {# Message #}
+          <div>
+            {{ form_label(form.message, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+            {{ form_widget(form.message, {attr: {
+              style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .3s;resize:vertical;box-sizing:border-box;',
+              onfocus: "this.style.borderColor='var(--gold)'",
+              onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"
+            }}) }}
+            {{ form_errors(form.message) }}
+          </div>
+
+          {# Submit #}
+          <button type="submit" id="submitBtn" class="btn-primary"
+                  style="padding:.9rem 2rem;font-size:.95rem;width:100%;justify-content:center;margin-top:.5rem;"
+                  onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Envoi en cours...'">
+            <i class="fas fa-paper-plane"></i> Envoyer le message
+          </button>
+
+        </div>
+        {{ form_end(form) }}
+      </div>
+    </div>
+
+    {# ── INFOS CONTACT ── #}
+    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+      <div style="background:var(--navy);border-radius:16px;padding:2rem;box-shadow:0 8px 32px rgba(13,27,42,0.2);border:1px solid rgba(201,168,76,0.15);">
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold);margin-bottom:1.4rem;">
+          📍 Nos coordonnées
+        </h3>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;align-items:flex-start;gap:.75rem;">
+            <i class="fas fa-envelope" style="color:var(--gold);margin-top:.2rem;width:16px;"></i>
+            <div>
+              <p style="font-size:.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px;margin:0 0 .2rem;">Email</p>
+              <a href="mailto:bechirhadidan8@gmail.com" style="color:#fff;font-size:.875rem;text-decoration:none;">bechirhadidan8@gmail.com</a>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:.75rem;">
+            <i class="fas fa-clock" style="color:var(--gold);margin-top:.2rem;width:16px;"></i>
+            <div>
+              <p style="font-size:.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px;margin:0 0 .2rem;">Délai de réponse</p>
+              <p style="color:#fff;font-size:.875rem;margin:0;">Sous 24 heures</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:.75rem;">
+            <i class="fas fa-plane" style="color:var(--gold);margin-top:.2rem;width:16px;"></i>
+            <div>
+              <p style="font-size:.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.5px;margin:0 0 .2rem;">Services</p>
+              <p style="color:#fff;font-size:.875rem;margin:0;">Voyages sur mesure, devis gratuit</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--white);border-radius:16px;padding:1.6rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+        <h4 style="font-size:.85rem;font-weight:700;color:var(--navy);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.5px;">
+          <i class="fas fa-question-circle" style="color:var(--gold);margin-right:.4rem;"></i> FAQ rapide
+        </h4>
+        {% set faqs = [
+          {q: 'Puis-je personnaliser mon voyage ?', r: 'Oui, tous nos voyages sont adaptables selon vos préférences.'},
+          {q: 'Quel est le délai de réservation ?', r: 'Nous recommandons de réserver au moins 2 semaines à l\'avance.'},
+          {q: 'Les prix incluent-ils les vols ?', r: 'Cela dépend du forfait. Vérifiez les détails de chaque voyage.'}
+        ] %}
+        {% for faq in faqs %}
+          <div style="padding:.8rem 0;border-bottom:1px solid rgba(13,27,42,0.06);{% if loop.last %}border:none;{% endif %}">
+            <p style="font-size:.82rem;font-weight:600;color:var(--navy);margin:0 0 .3rem;">{{ faq.q }}</p>
+            <p style="font-size:.78rem;color:var(--muted);margin:0;line-height:1.5;">{{ faq.r }}</p>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

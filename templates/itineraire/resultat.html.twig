@@ -1,0 +1,95 @@
+{% extends 'base_dark.html.twig' %}
+{% block title %}Itinéraire — {{ destination.nom }}{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+
+    {# ── En-tête destination ── #}
+    <div class="card mb-4 shadow-sm">
+        {% if destination.firstImage %}
+        <img src="{{ destination.firstImage }}"
+             class="card-img-top"
+             style="height:280px;object-fit:cover"
+             alt="{{ destination.nom }}">
+        {% endif %}
+        <div class="card-body">
+            <h2 class="card-title">
+                {{ destination.nom }} — {{ destination.pays }}
+            </h2>
+            <p class="text-muted mb-1">
+                Départ : <strong>{{ voyage.paysDepart ?? 'Tunisie' }}</strong>
+                &nbsp;|&nbsp;
+                Durée : <strong>{{ voyage.dureeJours }} jours</strong>
+                &nbsp;|&nbsp;
+                Budget : <strong>{{ voyage.prix|number_format(2, ',', ' ') }} TND</strong>
+            </p>
+            <p class="text-muted">
+                Du {{ voyage.dateDebut|date('d/m/Y') }}
+                au {{ voyage.dateFin|date('d/m/Y') }}
+            </p>
+        </div>
+    </div>
+
+    {# ── Itinéraire IA ── #}
+    {% if itineraire.erreur is defined %}
+
+        <div class="alert alert-danger">
+            <strong>Erreur :</strong> {{ itineraire.erreur }}
+        </div>
+
+    {% elseif itineraire.jours is defined %}
+
+        <h3 class="mb-4">
+            <span class="badge bg-primary me-2">IA</span>
+            Votre itinéraire personnalisé
+        </h3>
+
+        {% for jour in itineraire.jours %}
+        <div class="card mb-3 border-start border-primary border-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    Jour {{ jour.numero }} — {{ jour.titre ?? '' }}
+                </h5>
+                <ul class="list-unstyled mb-0">
+                    {% for activite in jour.activites ?? [] %}
+                    <li class="mb-2 d-flex align-items-start">
+                        <span class="badge bg-light text-dark me-3 mt-1">
+                            {{ activite.heure ?? '' }}
+                        </span>
+                        <span>{{ activite.description }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if itineraire.conseils is defined %}
+        <div class="card mt-4 border-warning border-2">
+            <div class="card-body">
+                <h5 class="card-title text-warning">
+                    💡 Conseils pratiques
+                </h5>
+                <p class="mb-0">{{ itineraire.conseils }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+    {% else %}
+
+        <div class="alert alert-warning">
+            Format de réponse inattendu.
+        </div>
+        <pre class="bg-light p-3 rounded">{{ itineraire|json_encode(
+            constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE')
+        ) }}</pre>
+
+    {% endif %}
+
+    <a href="{{ path('voyage_show', {id: voyage.id}) }}"
+       class="btn btn-outline-secondary mt-4">
+        ← Retour au voyage
+    </a>
+
+</div>
+{% endblock %}

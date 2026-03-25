@@ -21,7 +21,6 @@
 
 {# ── FILTRES ── #}
 <div style="background:var(--cream);padding:1.8rem 5%;border-bottom:1px solid rgba(13,27,42,0.08);display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
-
   <form method="GET" style="display:flex;gap:.75rem;flex:1;min-width:240px;">
     <div style="flex:1;position:relative;">
       <i class="fas fa-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.875rem;"></i>
@@ -31,22 +30,16 @@
              onfocus="this.style.borderColor='var(--gold)'"
              onblur="this.style.borderColor='rgba(13,27,42,0.15)'">
     </div>
-    <button type="submit" class="btn-primary" style="padding:.7rem 1.4rem;font-size:.875rem;">
-      Chercher
-    </button>
+    <button type="submit" class="btn-primary" style="padding:.7rem 1.4rem;font-size:.875rem;">Chercher</button>
     {% if query %}
-      <a href="{{ path('voyage_index') }}" class="btn-navy" style="padding:.7rem 1rem;">
-        <i class="fas fa-times"></i>
-      </a>
+      <a href="{{ path('voyage_index') }}" class="btn-navy" style="padding:.7rem 1rem;"><i class="fas fa-times"></i></a>
     {% endif %}
   </form>
 
   <form method="GET">
     <select name="destination" onchange="this.form.submit()"
-            style="padding:.7rem 1.2rem;border:1px solid rgba(13,27,42,0.15);border-radius:50px;font-family:inherit;font-size:.875rem;outline:none;cursor:pointer;background:var(--white);color:var(--navy);transition:border-color .3s;"
-            onfocus="this.style.borderColor='var(--gold)'"
-            onblur="this.style.borderColor='rgba(13,27,42,0.15)'">
-      <option value=""><i class="fas fa-globe"></i> Toutes les destinations</option>
+            style="padding:.7rem 1.2rem;border:1px solid rgba(13,27,42,0.15);border-radius:50px;font-family:inherit;font-size:.875rem;outline:none;cursor:pointer;background:var(--white);color:var(--navy);">
+      <option value="">Toutes les destinations</option>
       {% for dest in destinations %}
         <option value="{{ dest.id }}" {{ filtreDestId is defined and filtreDestId == dest.id ? 'selected' }}>
           {{ dest.nom }} — {{ dest.pays }}
@@ -54,7 +47,6 @@
       {% endfor %}
     </select>
   </form>
-
 </div>
 
 {# ── LISTE ── #}
@@ -67,27 +59,34 @@
         {% if query is defined and query %}Aucun résultat pour « {{ query }} »{% else %}Aucun voyage disponible{% endif %}
       </h3>
       <p style="color:var(--muted);margin-bottom:2rem;">Commencez par créer votre premier voyage.</p>
-      <a href="{{ path('voyage_new') }}" class="btn-primary">
-        <i class="fas fa-plus"></i> Créer un voyage
-      </a>
+      <a href="{{ path('voyage_new') }}" class="btn-primary"><i class="fas fa-plus"></i> Créer un voyage</a>
     </div>
 
   {% else %}
     <p style="color:var(--muted);font-size:.82rem;margin-bottom:1.8rem;">
-      <i class="fas fa-plane" style="color:var(--gold);"></i>
-      {{ voyages|length }} voyage(s) trouvé(s)
+      <i class="fas fa-plane" style="color:var(--gold);"></i> {{ voyages|length }} voyage(s) trouvé(s)
     </p>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.4rem;">
       {% for voyage in voyages %}
+
+        {# ✅ Image : priorité imagePath, sinon firstImage de la destination liée #}
+        {% if voyage.imagePath %}
+          {% set cardImg = voyage.imagePath %}
+        {% elseif voyage.destinationRel and voyage.destinationRel.firstImage %}
+          {% set cardImg = voyage.destinationRel.firstImage %}
+        {% else %}
+          {% set cardImg = null %}
+        {% endif %}
+
         <div style="background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(13,27,42,0.08);border:1px solid rgba(13,27,42,0.06);transition:transform .3s,box-shadow .3s;position:relative;"
              onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 40px rgba(13,27,42,0.14)'"
              onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 12px rgba(13,27,42,0.08)'">
 
           {# Image #}
           <div style="position:relative;height:200px;overflow:hidden;background:var(--navy);">
-            {% if voyage.imagePath %}
-              <img src="{{ voyage.imagePath }}" alt="{{ voyage.destination }}"
+            {% if cardImg %}
+              <img src="{{ cardImg }}" alt="{{ voyage.destination }}"
                    style="width:100%;height:100%;object-fit:cover;transition:transform .5s;"
                    onmouseover="this.style.transform='scale(1.06)'"
                    onmouseout="this.style.transform='scale(1)'">
