@@ -55,14 +55,24 @@ class Destination
     }
 
     // ── Retourne le tableau de toutes les images ──────────────────
-    public function getAllImages(): array
-    {
-        if (!$this->imageUrl) return [];
-        return array_filter(
-            explode('|', $this->imageUrl),
-            fn($img) => trim($img) !== ''
-        );
+   public function getAllImages(): array
+{
+    if (!$this->imageUrl) return [];
+
+    $raw = trim($this->imageUrl);
+
+    // Format JSON (stocké par n8n) : ["https://...","https://..."]
+    if (str_starts_with($raw, '[')) {
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? array_filter($decoded) : [];
     }
+
+    // Format legacy pipe (stocké manuellement) : url1|url2|url3
+    return array_filter(
+        explode('|', $raw),
+        fn($img) => trim($img) !== ''
+    );
+}
 
     // ── Retourne la première image uniquement ─────────────────────
     public function getFirstImage(): ?string
