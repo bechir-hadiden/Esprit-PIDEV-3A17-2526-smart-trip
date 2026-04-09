@@ -198,6 +198,8 @@
     .fade-in { animation:fadeInUp .8s ease forwards; }
     .delay-1 { animation-delay:.2s; opacity:0; }
     .delay-2 { animation-delay:.4s; opacity:0; }
+
+    {% block extra_css %}{% endblock %}
   </style>
   {% block stylesheets %}{% endblock %}
 </head>
@@ -207,8 +209,8 @@
 <nav id="navbar">
   <a href="{{ path('app_home') }}" class="nav-logo">Smart<span>Trip</span></a>
   <ul class="nav-links">
-    <li><a href="{{ path('destination_index') }}">Destinations</a></li>
-    <li><a href="{{ path('voyage_index') }}">Voyages</a></li>
+    <li><a href="{{ path('client_destination_index') }}">Destinations</a></li>
+    <li><a href="{{ path('client_voyage_index') }}">Voyages</a></li>
     <li><a href="{{ path('app_home') }}#about">À propos</a></li>
     <li><a href="{{ path('app_home') }}#contact" class="nav-cta">Réserver</a></li>
   </ul>
@@ -228,7 +230,7 @@
 <footer>
   <div class="footer-grid">
     <div class="footer-brand">
-      <a href="{{ path('app_home') }}" class="nav-logo" style="font-size:1.3rem">Voyage<span style="color:#fff">Elite</span></a>
+      <a href="{{ path('app_home') }}" class="nav-logo" style="font-size:1.3rem">Smart<span style="color:#fff">Trip</span></a>
       <p>Votre partenaire de confiance pour des voyages d'exception. Nous créons des expériences inoubliables à travers le monde entier.</p>
       <div class="social-links">
         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
@@ -240,15 +242,15 @@
     <div class="footer-col">
       <h4>Destinations</h4>
       <ul>
-        <li><a href="{{ path('destination_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Toutes les destinations</a></li>
-        <li><a href="{{ path('destination_new') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Ajouter une destination</a></li>
+        <li><a href="{{ path('client_destination_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Toutes les destinations</a></li>
+        <li><a href="{{ path('admin_destination_new') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Ajouter une destination</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Voyages</h4>
       <ul>
-        <li><a href="{{ path('voyage_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Tous les voyages</a></li>
-        <li><a href="{{ path('voyage_new') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Créer un voyage</a></li>
+        <li><a href="{{ path('client_voyage_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Tous les voyages</a></li>
+        <li><a href="{{ path('admin_voyage_new') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Créer un voyage</a></li>
       </ul>
     </div>
     <div class="footer-col">

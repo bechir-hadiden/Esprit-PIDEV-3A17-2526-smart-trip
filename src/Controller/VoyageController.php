@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/voyages', name: 'voyage_')]
+#[Route('/admin/voyages', name: 'admin_voyage_')]
 class VoyageController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]

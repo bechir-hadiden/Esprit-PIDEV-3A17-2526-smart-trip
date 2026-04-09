@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route('/destinations', name: 'destination_')]
+#[Route('/admin/destinations', name: 'admin_destination_')]
 class DestinationController extends AbstractController
 {
     public function __construct(

@@ -12,13 +12,13 @@
     <h1>Explorez le Monde<br>avec <em>Élégance</em></h1>
     <p>Des voyages sur mesure, des expériences inoubliables. Laissez-nous vous emmener vers des destinations exceptionnelles soigneusement sélectionnées.</p>
     <div class="hero-btns">
-      <a href="{{ path('voyage_index') }}" class="btn-primary delay-1"><i class="fas fa-compass"></i> Voir nos voyages</a>
+      <a href="{{ path('client_voyage_index') }}" class="btn-primary delay-1"><i class="fas fa-compass"></i> Voir nos voyages</a>
       <a href="#contact" class="btn-outline-light delay-2"><i class="fas fa-phone"></i> Nous contacter</a>
     </div>
   </div>
 
   <div class="hero-search">
-    <form class="search-box" action="{{ path('destination_index') }}" method="GET">
+    <form class="search-box" action="{{ path('client_destination_index') }}" method="GET">
       <div class="search-field">
         <label><i class="fas fa-map-marker-alt"></i> Destination</label>
         <select name="q">
@@ -53,7 +53,7 @@
       <h2 class="section-title">Destinations Populaires</h2>
       <p class="section-sub">Des endroits magiques sélectionnés par nos experts pour des voyages mémorables.</p>
     </div>
-    <a href="{{ path('destination_index') }}" class="btn-navy">Voir tout <i class="fas fa-arrow-right"></i></a>
+    <a href="{{ path('client_destination_index') }}" class="btn-navy">Voir tout <i class="fas fa-arrow-right"></i></a>
   </div>
   <div class="dest-grid">
     {% for dest in destinations %}
@@ -74,14 +74,14 @@
               {% if dest.voyages|length > 0 %}À partir de {{ dest.voyages|first.prix|number_format(0,',',' ') }} TND
               {% else %}Sur devis{% endif %}
             </span>
-            <a href="{{ path('destination_show', {id: dest.id}) }}" class="dest-action"><i class="fas fa-arrow-right"></i></a>
+            <a href="{{ path('client_destination_show', {id: dest.id}) }}" class="dest-action"><i class="fas fa-arrow-right"></i></a>
           </div>
         </div>
       </div>
     {% else %}
       <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);">
         <p>Aucune destination disponible.</p>
-        <a href="{{ path('destination_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter une destination</a>
+        <a href="{{ path('admin_destination_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter une destination</a>
       </div>
     {% endfor %}
   </div>
@@ -95,11 +95,10 @@
       <h2 class="section-title light">Voyages & Packages</h2>
       <p class="section-sub" style="color:rgba(255,255,255,0.55)">Tout inclus pour voyager l'esprit serein, du budget au luxe absolu.</p>
     </div>
-    <a href="{{ path('voyage_index') }}" class="btn-gold">Tous les voyages <i class="fas fa-arrow-right"></i></a>
+    <a href="{{ path('client_voyage_index') }}" class="btn-gold">Tous les voyages <i class="fas fa-arrow-right"></i></a>
   </div>
   <div class="packages-grid">
     {% for voyage in voyages %}
-      {# Image : imagePath ou firstImage de la destination liée #}
       {% if voyage.imagePath %}
         {% set pkgImg = voyage.imagePath %}
       {% elseif voyage.destinationRel and voyage.destinationRel.firstImage %}
@@ -137,14 +136,14 @@
               <div class="pkg-price-label">À partir de</div>
               <div class="pkg-price">{{ voyage.prix|number_format(0,',',' ') }} <small>TND / pers.</small></div>
             </div>
-            <a href="{{ path('voyage_show', {id: voyage.id}) }}" class="btn-gold">Voir le voyage</a>
+            <a href="{{ path('client_voyage_show', {id: voyage.id}) }}" class="btn-gold">Voir le voyage</a>
           </div>
         </div>
       </div>
     {% else %}
       <div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(255,255,255,0.4);">
         <p>Aucun voyage disponible.</p>
-        <a href="{{ path('voyage_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter un voyage</a>
+        <a href="{{ path('admin_voyage_new') }}" class="btn-gold" style="margin-top:1rem;">+ Ajouter un voyage</a>
       </div>
     {% endfor %}
   </div>
@@ -212,11 +211,9 @@
     </div>
   </div>
 
-  {# ── FORMULAIRE CONNECTÉ ── #}
   <div class="contact-form">
     <h3>Demande de devis gratuit</h3>
 
-    {# Flash messages #}
     {% for msg in app.flashes('contact_success') %}
       <div style="background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.4);border-radius:10px;
                   padding:.9rem 1.2rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem;">

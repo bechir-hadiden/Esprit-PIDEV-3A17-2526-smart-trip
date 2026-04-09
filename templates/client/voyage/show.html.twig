@@ -1,0 +1,260 @@
+{% extends 'client/base.html.twig' %}
+
+{% block title %}{{ voyage.destination }}{% endblock %}
+
+{% block extra_css %}
+/* ── HERO ── */
+.voyage-hero {
+    min-height: 55vh; background: var(--ink); margin-top: 4rem;
+    display: grid; grid-template-columns: 1fr 1fr; position: relative; overflow: hidden;
+}
+.vh-image {
+    position: relative; overflow: hidden;
+}
+.vh-image img { width:100%; height:100%; object-fit:cover; opacity:0.7; }
+.vh-placeholder {
+    width:100%; height:100%;
+    background: linear-gradient(135deg, var(--ink) 0%, #1a3c5e 50%, rgba(201,168,76,0.2) 100%);
+}
+.vh-content {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 4rem 3.5rem; position: relative;
+}
+.vh-content::before {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(90deg, rgba(13,27,42,0.3) 0%, transparent 100%);
+}
+.vh-inner { position: relative; z-index: 1; }
+.vh-breadcrumb {
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(245,240,232,0.45); display: flex; gap: 0.6rem; align-items: center;
+    margin-bottom: 1.2rem;
+}
+.vh-breadcrumb a { color: var(--gold-lt); text-decoration: none; }
+.vh-breadcrumb a:hover { color: var(--gold); }
+.vh-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem,4vw,3.5rem); font-weight: 300;
+    color: var(--white); line-height: 1.15; margin-bottom: 1.5rem;
+}
+.vh-tags { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.vh-tag {
+    border: 0.5px solid rgba(201,168,76,0.4);
+    padding: 0.3rem 0.8rem; font-size: 0.7rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--gold-lt);
+}
+.vh-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem; font-weight: 300; color: var(--white); line-height: 1;
+}
+.vh-price small {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem; font-weight: 400; color: rgba(245,240,232,0.5);
+    display: block; margin-top: 0.3rem; letter-spacing: 0.06em;
+}
+
+/* ── CONTENT ── */
+.voyage-content {
+    display: grid; grid-template-columns: 1fr 360px;
+    gap: 4rem; padding: 5rem 3.5rem; align-items: start;
+}
+.section-label {
+    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold); display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 1.2rem;
+}
+.section-label::before { content:''; display:block; width:28px; height:0.5px; background:var(--gold); }
+
+/* Infos rapides */
+.quick-facts {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5px;
+    background: rgba(201,168,76,0.15); margin-bottom: 3rem;
+}
+.qf-item {
+    background: var(--sand); padding: 1.5rem 1.2rem;
+}
+.qf-ico { font-size: 1.1rem; color: var(--gold); margin-bottom: 0.5rem; }
+.qf-label {
+    font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 0.3rem;
+}
+.qf-val { font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+
+/* Description */
+.voyage-desc {
+    font-size: 0.96rem; line-height: 1.9; color: var(--muted);
+}
+
+/* Destination liée */
+.linked-dest {
+    margin-top: 3rem; text-decoration: none; display: block;
+    background: var(--sand); border: 0.5px solid rgba(201,168,76,0.2);
+    padding: 1.8rem; transition: background 0.25s;
+}
+.linked-dest:hover { background: var(--ink); }
+.linked-dest:hover .ld-name { color: var(--white); }
+.linked-dest:hover .ld-sub { color: rgba(245,240,232,0.5); }
+.ld-label {
+    font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.6rem;
+}
+.ld-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; font-weight: 300; color: var(--ink);
+    transition: color 0.25s;
+}
+.ld-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; transition: color 0.25s; }
+
+/* Sidebar */
+/* Réservation card */
+.reservation-card {
+    background: var(--white); border: 0.5px solid rgba(201,168,76,0.25);
+    position: sticky; top: 5.5rem;
+}
+.rc-header {
+    background: var(--ink); padding: 1.8rem 2rem;
+}
+.rc-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; font-weight: 300; color: var(--white);
+}
+.rc-price small {
+    font-size: 0.78rem; font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400; color: rgba(245,240,232,0.5); display: block;
+}
+.rc-body { padding: 1.8rem 2rem; }
+.rc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 0; border-bottom: 0.5px solid rgba(201,168,76,0.12);
+}
+.rc-row:last-of-type { border-bottom: none; }
+.rc-key {
+    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500;
+}
+.rc-val { font-size: 0.86rem; font-weight: 600; color: var(--ink); text-align: right; }
+.rc-cta {
+    padding: 1rem 2rem; border-top: 0.5px solid rgba(201,168,76,0.15);
+}
+.rc-cta .btn-primary { display: block; text-align: center; padding: 1rem; font-size: 0.78rem; }
+.rc-note {
+    font-size: 0.72rem; color: var(--muted); text-align: center;
+    margin-top: 0.8rem; line-height: 1.6;
+}
+{% endblock %}
+
+{% block body %}
+
+{# ── HERO ── #}
+<div class="voyage-hero">
+    <div class="vh-image">
+        {% if voyage.imagePath %}
+            <img src="{{ voyage.imagePath }}" alt="{{ voyage.destination }}">
+        {% else %}
+            <div class="vh-placeholder"></div>
+        {% endif %}
+    </div>
+    <div class="vh-content">
+        <div class="vh-inner">
+            <div class="vh-breadcrumb">
+                <a href="{{ path('client_voyage_index') }}">Voyages</a>
+                <span>·</span>
+                <span>{{ voyage.destination }}</span>
+            </div>
+            <div class="vh-title">{{ voyage.destination }}</div>
+            <div class="vh-tags">
+                <span class="vh-tag">{{ voyage.dureeJours }} jours</span>
+                {% if voyage.paysDepart %}<span class="vh-tag">Départ {{ voyage.paysDepart }}</span>{% endif %}
+                {% if voyage.destinationRel %}<span class="vh-tag">{{ voyage.destinationRel.codeIata }}</span>{% endif %}
+            </div>
+            <div class="vh-price">
+                {{ voyage.prix|number_format(0, ',', ' ') }} TND
+                <small>par personne, tout compris</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── CONTENT ── #}
+<div class="voyage-content">
+    <div>
+        {# Quick facts #}
+        <div class="quick-facts">
+            <div class="qf-item">
+                <div class="qf-ico">✦</div>
+                <div class="qf-label">Date de départ</div>
+                <div class="qf-val">{{ voyage.dateDebut|date('d M Y') }}</div>
+            </div>
+            <div class="qf-item">
+                <div class="qf-ico">◈</div>
+                <div class="qf-label">Date de retour</div>
+                <div class="qf-val">{{ voyage.dateFin|date('d M Y') }}</div>
+            </div>
+            <div class="qf-item">
+                <div class="qf-ico">◇</div>
+                <div class="qf-label">Durée</div>
+                <div class="qf-val">{{ voyage.dureeJours }} jours</div>
+            </div>
+        </div>
+
+        {# Description #}
+        {% if voyage.description %}
+            <div class="section-label">À propos du voyage</div>
+            <p class="voyage-desc">{{ voyage.description }}</p>
+        {% endif %}
+
+        {# Destination liée #}
+        {% if voyage.destinationRel %}
+            <div class="section-label" style="margin-top:3rem;">Destination</div>
+            <a href="{{ path('client_destination_show', {id: voyage.destinationRel.id}) }}" class="linked-dest">
+                <div class="ld-label">Explorer la destination</div>
+                <div class="ld-name">{{ voyage.destinationRel.nom }}</div>
+                <div class="ld-sub">{{ voyage.destinationRel.pays }} · {{ voyage.destinationRel.description|slice(0,100)|replace({'\\n':' '}) }}{% if voyage.destinationRel.description|length > 100 %}…{% endif %}</div>
+            </a>
+        {% endif %}
+    </div>
+
+    {# ── SIDEBAR ── #}
+    <aside>
+        <div class="reservation-card">
+            <div class="rc-header">
+                <div class="rc-price">
+                    {{ voyage.prix|number_format(0, ',', ' ') }} TND
+                    <small>par personne</small>
+                </div>
+            </div>
+            <div class="rc-body">
+                <div class="rc-row">
+                    <span class="rc-key">Destination</span>
+                    <span class="rc-val">{{ voyage.destination }}</span>
+                </div>
+                <div class="rc-row">
+                    <span class="rc-key">Départ</span>
+                    <span class="rc-val">{{ voyage.dateDebut|date('d/m/Y') }}</span>
+                </div>
+                <div class="rc-row">
+                    <span class="rc-key">Retour</span>
+                    <span class="rc-val">{{ voyage.dateFin|date('d/m/Y') }}</span>
+                </div>
+                <div class="rc-row">
+                    <span class="rc-key">Durée</span>
+                    <span class="rc-val">{{ voyage.dureeJours }} jours</span>
+                </div>
+                {% if voyage.paysDepart %}
+                <div class="rc-row">
+                    <span class="rc-key">Pays départ</span>
+                    <span class="rc-val">{{ voyage.paysDepart }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="rc-cta">
+                <a href="{{ path('app_home') }}#contact" class="btn-primary">
+                    Demander un devis →
+                </a>
+                <p class="rc-note">Un conseiller vous répond sous 24h. Réservation sans engagement.</p>
+            </div>
+        </div>
+    </aside>
+</div>
+
+{% endblock %}
