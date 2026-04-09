@@ -1,0 +1,893 @@
+
+
+{% extends 'base.html.twig' %}
+
+{% block title %}SmartTrip - Avis voyageurs{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Styles généraux */
+        .container-fluid { background: #f8f9fa; min-height: 100vh; }
+        .card { transition: transform 0.2s ease, box-shadow 0.2s ease; overflow: visible !important; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; }
+        .card-body { overflow: visible !important; }
+        
+        /* Étoiles interactives */
+        .star-icon { cursor: pointer; transition: all 0.2s; margin-right: 5px; }
+        .star-icon:hover { transform: scale(1.1); }
+        
+        /* Destination icon */
+        .destination-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: #f8f9fa;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #e9ecef;
+        }
+        .destination-icon:hover {
+            background: #e9ecef;
+            border-color: #0d6efd;
+            transform: translateY(-1px);
+        }
+        .weather-badge {
+            background: white;
+            padding: 2px 8px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        /* Modal météo */
+        .weather-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1060;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .weather-modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 360px;
+            max-width: 90%;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .weather-modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .weather-modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .weather-modal-body { padding: 24px; }
+        
+        /* Avatar */
+        .avatar-circle {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        /* RECHERCHE VOCALE */
+        .voice-search-container {
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .voice-search-input {
+            border: none;
+            padding: 12px 20px;
+            width: calc(100% - 110px);
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .voice-search-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voice-search-btn:hover { transform: scale(1.02); }
+        .voice-search-btn.listening { background: #dc3545; animation: pulse 1s infinite; }
+        .voice-commands { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .voice-command-chip {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voice-command-chip:hover { background: #0d6efd; color: white; }
+        
+        /* TRADUCTION */
+        .translate-btn {
+            transition: all 0.2s;
+            font-size: 0.7rem;
+        }
+        .translate-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+        .translation-result {
+            border-left: 3px solid #0d6efd;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .lang-info { font-size: 0.65rem; }
+        mark.highlight { background-color: #ffeb3b; padding: 0 2px; border-radius: 3px; }
+        
+        /* PHOTOS */
+        .photo-thumb {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .photo-thumb:hover { transform: scale(1.05); }
+        .photo-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+        }
+        .photo-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 35px;
+            cursor: pointer;
+        }
+        .modal-caption { color: white; text-align: center; margin-top: 15px; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        
+        @media (max-width: 768px) {
+            .avatar-circle { width: 40px; height: 40px; font-size: 1rem; }
+            .destination-icon { font-size: 0.7rem; padding: 3px 10px; }
+            .voice-search-input { width: calc(100% - 90px); font-size: 0.85rem; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="container">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="bg-primary text-white p-3 rounded-3 shadow-sm">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Espace Avis Voyageurs
+                        <span class="badge bg-light text-primary ms-2">{{ avisList|length }}</span>
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show py-2 mb-3">
+                <i class="fas fa-check-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <div class="row g-4">
+            <!-- COLONNE GAUCHE : Formulaire -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="text-primary mb-0"><i class="fas fa-pen-alt me-2"></i>Partagez votre expérience</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        {{ form_start(form, {'attr': {'id': 'newAvisForm'}}) }}
+                            <div class="mb-2">
+                                <div class="form-floating">
+                                    {{ form_widget(form.nomClient, {'attr': {'class': 'form-control form-control-sm', 'style': 'height: 45px;'}}) }}
+                                    <label><i class="fas fa-user me-1 text-primary"></i>Nom complet</label>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="form-floating">
+                                    {{ form_widget(form.email, {'attr': {'class': 'form-control form-control-sm', 'style': 'height: 45px;'}}) }}
+                                    <label><i class="fas fa-envelope me-1 text-primary"></i>Email</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted mb-2"><i class="fas fa-star text-warning me-1"></i>Note</label>
+                                <div class="d-flex gap-2" id="ratingStars">
+                                    {% for i in 1..5 %}
+                                        <i class="fas fa-star fa-2x star-icon" data-value="{{ i }}" style="color: #ffc107; cursor: pointer;"></i>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" id="rating-value" name="note" value="5">
+                            </div>
+                            <div class="mb-2">
+                                <div class="form-floating">
+                                    {{ form_widget(form.destination, {'attr': {'class': 'form-control form-control-sm', 'style': 'height: 45px;', 'id': 'destination-input'}}) }}
+                                    <label><i class="fas fa-map-marker-alt me-1 text-danger"></i>Destination</label>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="form-floating">
+                                    {{ form_widget(form.voyageId, {'attr': {'class': 'form-control form-control-sm', 'style': 'height: 45px;'}}) }}
+                                    <label><i class="fas fa-plane me-1 text-primary"></i>Voyage #</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-floating">
+                                    {{ form_widget(form.commentaire, {'attr': {'class': 'form-control', 'placeholder': 'Commentaire', 'style': 'height: 100px;', 'id': 'commentaire-input'}}) }}
+                                    <label><i class="fas fa-comment me-1 text-primary"></i>Commentaire</label>
+                                </div>
+                                <button type="button" id="micBtn" class="btn btn-sm btn-outline-primary rounded-circle mt-2" style="width: 38px; height: 38px;" title="Dicter votre avis">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button type="button" id="stopMicBtn" class="btn btn-sm btn-outline-danger rounded-circle mt-2" style="width: 38px; height: 38px; display: none;" title="Arrêter">
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                                <div id="listeningIndicator" class="small text-muted text-center mt-1" style="display: none;">
+                                    <i class="fas fa-circle text-danger" style="font-size: 8px;"></i> Écoute en cours...
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">
+                                <i class="fas fa-paper-plane me-2"></i>Publier mon avis
+                            </button>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNE DROITE : Liste des avis -->
+            <div class="col-md-8">
+                <!-- RECHERCHE VOCALE AVANCÉE -->
+                <div class="voice-search-container">
+                    <div class="d-flex">
+                        <input type="text" id="voiceSearchInput" class="voice-search-input" placeholder="🔍 Rechercher par voix ou texte...">
+                        <button id="voiceSearchBtn" class="voice-search-btn">
+                            <i class="fas fa-microphone"></i> Dicter
+                        </button>
+                    </div>
+                    <div class="voice-commands">
+                        <span class="voice-command-chip" data-command="recherche bon">🔊 "recherche bon"</span>
+                        <span class="voice-command-chip" data-command="recherche super">🔊 "recherche super"</span>
+                        <span class="voice-command-chip" data-command="recherche 5 étoiles">🔊 "recherche 5 étoiles"</span>
+                        <span class="voice-command-chip" data-command="afficher tout">🔊 "afficher tout"</span>
+                        <span class="voice-command-chip" data-command="meilleurs avis">🔊 "meilleurs avis"</span>
+                        <span class="voice-command-chip" data-command="avis positifs">🔊 "avis positifs"</span>
+                    </div>
+                    <div id="voiceSearchResult" class="small text-muted mt-2" style="display: none;"></div>
+                </div>
+
+                <!-- Filtres -->
+                <div class="d-flex gap-2 mb-3">
+                    <select class="form-select form-select-sm w-auto" id="filterNote">
+                        <option value="0">📊 Toutes les notes</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 5 étoiles</option>
+                        <option value="4">⭐⭐⭐⭐ 4 étoiles</option>
+                        <option value="3">⭐⭐⭐ 3 étoiles</option>
+                        <option value="2">⭐⭐ 2 étoiles</option>
+                        <option value="1">⭐ 1 étoile</option>
+                    </select>
+                    <select class="form-select form-select-sm w-auto" id="sortBy">
+                        <option value="date">🕐 Plus récents</option>
+                        <option value="note">⭐ Mieux notés</option>
+                    </select>
+                </div>
+
+                <!-- Liste des avis -->
+                <div class="row g-3" id="avisContainer">
+                    {% for avi in avisList %}
+                        <div class="col-12 avis-card" data-note="{{ avi.note }}" data-date="{{ avi.dateAvis.timestamp }}" data-commentaire="{{ avi.commentaire|lower }}" data-nom="{{ avi.nomClient|lower }}">
+                            <div class="card border-0 shadow-sm rounded-3 h-100">
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <!-- En-tête -->
+                                    <div class="d-flex justify-content-between align-items-start mb-2 flex-shrink-0">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle">{{ avi.nomClient|slice(0,1)|upper }}</div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">{{ avi.nomClient }}</h6>
+                                                <small class="text-muted">
+                                                    <i class="far fa-calendar-alt me-1"></i>{{ avi.dateAvis|date('d/m/Y') }}
+                                                    <span class="mx-1">•</span>
+                                                    <i class="fas fa-plane me-1"></i>Voyage #{{ avi.voyageId }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="editAvis({{ avi.id }})"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-outline-danger" onclick="deleteAvis({{ avi.id }})"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Note étoiles -->
+                                    <div class="mb-2 flex-shrink-0">
+                                        {% for i in 1..5 %}
+                                            {% if i <= avi.note %}<i class="fas fa-star text-warning"></i>{% else %}<i class="far fa-star text-warning"></i>{% endif %}
+                                        {% endfor %}
+                                        <span class="ms-2 small">{{ avi.note }}/5</span>
+                                    </div>
+
+                                    <!-- Commentaire -->
+                                    <div class="comment-section mb-2" style="max-height: 100px; overflow-y: auto;">
+                                        <p class="text-muted mb-0 comment-text" style="font-size:0.9rem;">
+                                            <i class="fas fa-quote-left text-primary me-1 small"></i>
+                                            {{ avi.commentaire }}
+                                        </p>
+                                    </div>
+
+                                    <!-- BOUTONS DE TRADUCTION -->
+                                    <div class="d-flex flex-wrap gap-2 mt-2 flex-shrink-0">
+                                        <button class="btn btn-sm btn-outline-secondary translate-btn" data-id="{{ avi.id }}" data-lang="fr">
+                                            <i class="fas fa-language"></i> 🇫🇷 Français
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary translate-btn" data-id="{{ avi.id }}" data-lang="en">
+                                            <i class="fas fa-language"></i> 🇬🇧 English
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary translate-btn" data-id="{{ avi.id }}" data-lang="es">
+                                            <i class="fas fa-language"></i> 🇪🇸 Español
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary translate-btn" data-id="{{ avi.id }}" data-lang="ar">
+                                            <i class="fas fa-language"></i> 🇸🇦 العربية
+                                        </button>
+                                    </div>
+
+                                    <!-- RÉSULTAT DE TRADUCTION -->
+                                    <div id="translation-{{ avi.id }}" class="translation-result mt-2" style="display: none;">
+                                        <div class="bg-light p-2 rounded small">
+                                            <div class="d-flex align-items-start gap-2">
+                                                <i class="fas fa-language text-primary mt-1"></i>
+                                                <div class="flex-grow-1">
+                                                    <span class="translated-text"></span>
+                                                    <span class="translation-loader" style="display: none;">
+                                                        <i class="fas fa-spinner fa-spin"></i> Traduction en cours...
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PHOTOS DE LA DESTINATION -->
+                                    {% if avi.photos and avi.photos|length %}
+                                    <div class="mt-2 flex-shrink-0">
+                                        <div class="d-flex gap-1 overflow-auto" style="max-height: 80px;">
+                                            {% for photo in avi.photos|slice(0, 4) %}
+                                            <img src="{{ photo.thumb }}" alt="{{ photo.description }}" 
+                                                 class="photo-thumb"
+                                                 onclick="showPhotoModal('{{ photo.url }}', '{{ photo.description }}', '{{ photo.photographer }}')">
+                                            {% endfor %}
+                                            {% if avi.photos|length > 4 %}
+                                            <div class="d-flex align-items-center justify-content-center bg-light rounded-3" style="width: 70px; height: 70px;">
+                                                <small class="text-muted">+{{ avi.photos|length - 4 }}</small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- DESTINATION ET BOUTON VOIR -->
+                                    {% if avi.destination %}
+                                    <div class="mt-3 pt-2 border-top flex-shrink-0">
+                                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                                            <div class="destination-icon" onclick="showWeatherModal({{ avi.id }})">
+                                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                                <span>{{ avi.destination|slice(0, 45) }}{% if avi.destination|length > 45 %}...{% endif %}</span>
+                                                {% if avi.weatherData %}
+                                                <span class="weather-badge"><i class="fas {{ avi.weatherData.icon }}"></i> {{ avi.weatherData.temperature }}°C</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- BOUTON VOIR DESTINATION - CORRIGÉ ET TOUJOURS VISIBLE -->
+                                            <a href="{{ path('app_destination_show', {'destination': avi.destination}) }}" 
+                                               class="btn btn-sm btn-outline-primary"
+                                               style="white-space: nowrap;">
+                                                <i class="fas fa-globe me-1"></i> Voir destination
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- MODAL MÉTÉO -->
+                                    <div id="weatherModal{{ avi.id }}" class="weather-modal" style="display: none;">
+                                        <div class="weather-modal-content">
+                                            <div class="weather-modal-header">
+                                                <span><i class="fas fa-map-marker-alt me-2"></i>{{ avi.destination|slice(0, 50) }}</span>
+                                                <button class="weather-modal-close" onclick="closeWeatherModal({{ avi.id }})">&times;</button>
+                                            </div>
+                                            {% if avi.weatherData %}
+                                            <div class="weather-modal-body">
+                                                <div class="text-center">
+                                                    <i class="fas {{ avi.weatherData.icon }} fa-4x text-primary mb-2"></i>
+                                                    <div class="display-4 fw-bold">{{ avi.weatherData.temperature }}°C</div>
+                                                    <p>{{ avi.weatherData.description|capitalize }}</p>
+                                                </div>
+                                                <div class="row text-center g-3">
+                                                    <div class="col-6"><div class="bg-light rounded p-2"><i class="fas fa-wind"></i><div class="fw-bold">{{ avi.weatherData.windspeed }} km/h</div><small>Vent</small></div></div>
+                                                    <div class="col-6"><div class="bg-light rounded p-2"><i class="fas fa-tint"></i><div class="fw-bold">{{ avi.weatherData.humidity ?? 'N/A' }}%</div><small>Humidité</small></div></div>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <a href="{{ path('app_destination_show', {'destination': avi.destination}) }}" class="btn btn-outline-primary w-100">
+                                                        <i class="fas fa-globe me-1"></i> Voir la destination
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- COMMENTAIRES -->
+                                    <div class="mt-3 pt-2 border-top mt-auto flex-shrink-0">
+                                        <button class="btn btn-sm btn-link text-decoration-none p-0" onclick="toggleComments({{ avi.id }})">
+                                            <i class="far fa-comment me-1"></i> Commentaires (<span id="comment-count-{{ avi.id }}">{{ avi.nombreCommentaires }}</span>)
+                                            <i class="fas fa-chevron-down ms-1 small" id="chevron-{{ avi.id }}"></i>
+                                        </button>
+                                        <div id="comments-{{ avi.id }}" class="comments-list mt-2" style="display: none;">
+                                            {% if avi.commentaires %}
+                                                {% for comment in avi.commentaires|sort((a, b) => b.date <=> a.date) %}
+                                                    <div class="bg-light rounded p-2 mb-2 small">
+                                                        <div class="d-flex justify-content-between"><strong class="text-primary">{{ comment.auteur }}</strong><small class="text-muted">{{ comment.date|date('d/m H:i') }}</small></div>
+                                                        <div class="mt-1">{{ comment.texte }}</div>
+                                                    </div>
+                                                {% endfor %}
+                                            {% endif %}
+                                            <div class="input-group input-group-sm mt-2">
+                                                <input type="text" class="form-control" id="comment-input-{{ avi.id }}" placeholder="Ajouter un commentaire...">
+                                                <button class="btn btn-primary btn-sm" onclick="addComment({{ avi.id }})"><i class="fas fa-paper-plane"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                            <p>Aucun avis pour le moment. Soyez le premier à partager votre expérience !</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de modification -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-2"><h6 class="modal-title"><i class="fas fa-edit me-2"></i>Modifier l'avis</h6><button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="mb-2"><input type="text" class="form-control form-control-sm" id="editNom" placeholder="Nom"></div>
+                    <div class="mb-2"><input type="email" class="form-control form-control-sm" id="editEmail" placeholder="Email"></div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><select class="form-select form-select-sm" id="editNote"><option value="5">⭐⭐⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="3">⭐⭐⭐</option><option value="2">⭐⭐</option><option value="1">⭐</option></select></div>
+                        <div class="col-6"><input type="number" class="form-control form-control-sm" id="editVoyageId" placeholder="Voyage #"></div>
+                    </div>
+                    <div class="mb-2"><textarea class="form-control form-control-sm" id="editCommentaire" rows="3" placeholder="Commentaire"></textarea></div>
+                    <div class="mb-2"><input type="text" class="form-control form-control-sm" id="editDestination" placeholder="Destination"></div>
+                </form>
+            </div>
+            <div class="modal-footer py-2"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Annuler</button><button type="button" class="btn btn-sm btn-primary" onclick="saveEdit()">Enregistrer</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PHOTO -->
+<div id="photoModal" class="photo-modal" style="display: none;">
+    <div class="photo-modal-content">
+        <span class="photo-modal-close" onclick="closePhotoModal()">&times;</span>
+        <img id="modalImage" class="modal-image" src="">
+        <div class="modal-caption">
+            <p id="modalCaption"></p>
+            <small id="modalCredit"></small>
+        </div>
+    </div>
+</div>
+
+<script>
+let editModal;
+let currentRating = 5;
+let voiceRecognition = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    document.getElementById('filterNote').addEventListener('change', filterAvis);
+    document.getElementById('sortBy').addEventListener('change', sortAvis);
+    document.querySelectorAll('.star-icon').forEach(star => star.addEventListener('click', () => setRating(parseInt(star.dataset.value))));
+    setRating(5);
+    initVoiceSearch();
+    initMicDictation();
+    initTranslation();
+});
+
+function setRating(value) {
+    currentRating = value;
+    document.getElementById('rating-value').value = value;
+    document.querySelectorAll('.star-icon').forEach((star, index) => star.style.opacity = index < value ? '1' : '0.3');
+}
+
+function filterAvis() {
+    const note = document.getElementById('filterNote').value;
+    document.querySelectorAll('.avis-card').forEach(card => card.style.display = (note == 0 || card.dataset.note == note) ? '' : 'none');
+}
+
+function sortAvis() {
+    const sortBy = document.getElementById('sortBy').value;
+    const container = document.getElementById('avisContainer');
+    const cards = Array.from(document.querySelectorAll('.avis-card'));
+    cards.sort((a, b) => sortBy === 'date' ? b.dataset.date - a.dataset.date : b.dataset.note - a.dataset.note);
+    cards.forEach(card => container.appendChild(card));
+}
+
+function toggleComments(id) {
+    const div = document.getElementById(`comments-${id}`);
+    const chevron = document.getElementById(`chevron-${id}`);
+    if (div.style.display === 'none') { div.style.display = 'block'; chevron.classList.remove('fa-chevron-down'); chevron.classList.add('fa-chevron-up'); }
+    else { div.style.display = 'none'; chevron.classList.remove('fa-chevron-up'); chevron.classList.add('fa-chevron-down'); }
+}
+
+function addComment(id) {
+    const input = document.getElementById(`comment-input-${id}`);
+    if (input.value.trim()) {
+        fetch(`/avis/commentaire/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ auteur: 'Visiteur', texte: input.value }) })
+            .then(() => location.reload());
+    }
+}
+
+function showWeatherModal(id) { document.getElementById(`weatherModal${id}`).style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+function closeWeatherModal(id) { document.getElementById(`weatherModal${id}`).style.display = 'none'; document.body.style.overflow = 'auto'; }
+
+function showPhotoModal(url, caption, photographer) {
+    document.getElementById('modalImage').src = url;
+    document.getElementById('modalCaption').innerHTML = caption;
+    document.getElementById('modalCredit').innerHTML = `📸 Photo par ${photographer} on Unsplash`;
+    document.getElementById('photoModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePhotoModal() {
+    document.getElementById('photoModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function editAvis(id) {
+    fetch(`/avis/modifier/${id}`).then(r => r.json()).then(avis => {
+        document.getElementById('editId').value = avis.id;
+        document.getElementById('editNom').value = avis.nomClient;
+        document.getElementById('editEmail').value = avis.email;
+        document.getElementById('editNote').value = avis.note;
+        document.getElementById('editVoyageId').value = avis.voyageId;
+        document.getElementById('editCommentaire').value = avis.commentaire;
+        document.getElementById('editDestination').value = avis.destination || '';
+        editModal.show();
+    });
+}
+
+function saveEdit() {
+    const id = document.getElementById('editId').value;
+    const data = { nomClient: document.getElementById('editNom').value, email: document.getElementById('editEmail').value, note: document.getElementById('editNote').value, voyageId: document.getElementById('editVoyageId').value, commentaire: document.getElementById('editCommentaire').value, destination: document.getElementById('editDestination').value };
+    fetch(`/avis/modifier/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(() => location.reload());
+}
+
+function deleteAvis(id) { if (confirm('Supprimer cet avis ?')) fetch(`/avis/supprimer/${id}`, { method: 'POST' }).then(() => location.reload()); }
+
+// ========== RECHERCHE VOCALE AVANCÉE ==========
+function initVoiceSearch() {
+    const voiceSearchBtn = document.getElementById('voiceSearchBtn');
+    const voiceSearchInput = document.getElementById('voiceSearchInput');
+    const voiceSearchResult = document.getElementById('voiceSearchResult');
+    
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        voiceSearchBtn.disabled = true;
+        voiceSearchResult.innerHTML = '<i class="fas fa-info-circle"></i> Reconnaissance vocale non supportée (Chrome/Edge recommandé)';
+        voiceSearchResult.style.display = 'block';
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    
+    voiceSearchBtn.addEventListener('click', function() {
+        if (recognition) { recognition.stop(); recognition = null; voiceSearchBtn.innerHTML = '<i class="fas fa-microphone"></i> Dicter'; voiceSearchBtn.classList.remove('listening'); return; }
+        
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = false;
+        
+        recognition.onstart = function() {
+            voiceSearchBtn.innerHTML = '<i class="fas fa-stop"></i> Arrêter';
+            voiceSearchBtn.classList.add('listening');
+            voiceSearchResult.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Écoute en cours... Parlez maintenant';
+            voiceSearchResult.style.display = 'block';
+        };
+        
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            voiceSearchInput.value = transcript;
+            processVoiceCommand(transcript, voiceSearchResult, voiceSearchInput);
+        };
+        
+        recognition.onerror = function() {
+            voiceSearchResult.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de reconnaissance';
+            voiceSearchBtn.innerHTML = '<i class="fas fa-microphone"></i> Dicter';
+            voiceSearchBtn.classList.remove('listening');
+        };
+        
+        recognition.onend = function() {
+            recognition = null;
+            voiceSearchBtn.innerHTML = '<i class="fas fa-microphone"></i> Dicter';
+            voiceSearchBtn.classList.remove('listening');
+        };
+        
+        recognition.start();
+    });
+    
+    voiceSearchInput.addEventListener('input', function() {
+        if (this.value) processVoiceCommand(this.value, voiceSearchResult, voiceSearchInput);
+        else { voiceSearchResult.style.display = 'none'; resetSearch(); }
+    });
+    
+    document.querySelectorAll('.voice-command-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            const command = this.dataset.command;
+            voiceSearchInput.value = command;
+            processVoiceCommand(command, voiceSearchResult, voiceSearchInput);
+        });
+    });
+}
+
+function processVoiceCommand(query, resultDiv, inputField) {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('afficher tout') || lowerQuery.includes('tout afficher') || lowerQuery.includes('reset')) {
+        resetSearch();
+        resultDiv.innerHTML = '<i class="fas fa-check-circle"></i> ✅ Tous les avis sont affichés';
+        resultDiv.style.display = 'block';
+        inputField.value = '';
+        setTimeout(() => resultDiv.style.display = 'none', 3000);
+        return;
+    }
+    
+    if (lowerQuery.includes('meilleurs avis') || lowerQuery.includes('top avis')) {
+        filterAvisByNote(4);
+        resultDiv.innerHTML = '<i class="fas fa-star"></i> ⭐ Affichage des meilleurs avis (4-5 étoiles)';
+        resultDiv.style.display = 'block';
+        setTimeout(() => resultDiv.style.display = 'none', 3000);
+        return;
+    }
+    
+    if (lowerQuery.includes('avis positifs')) {
+        filterAvisByNote(4);
+        resultDiv.innerHTML = '<i class="fas fa-smile"></i> 😊 Affichage des avis positifs';
+        resultDiv.style.display = 'block';
+        setTimeout(() => resultDiv.style.display = 'none', 3000);
+        return;
+    }
+    
+    let searchTerm = '';
+    if (lowerQuery.startsWith('recherche')) searchTerm = lowerQuery.replace('recherche', '').trim();
+    else if (lowerQuery.startsWith('cherche')) searchTerm = lowerQuery.replace('cherche', '').trim();
+    else searchTerm = lowerQuery;
+    
+    if (searchTerm) {
+        const noteMatch = searchTerm.match(/(\d)\s*étoiles?/);
+        if (noteMatch) {
+            const note = parseInt(noteMatch[1]);
+            filterAvisByNote(note);
+            resultDiv.innerHTML = `<i class="fas fa-star"></i> ⭐ Affichage des avis ${note} étoiles`;
+            resultDiv.style.display = 'block';
+            setTimeout(() => resultDiv.style.display = 'none', 3000);
+            return;
+        }
+        
+        filterAvisByText(searchTerm);
+        resultDiv.innerHTML = `<i class="fas fa-search"></i> 🔍 Recherche : "${searchTerm}"`;
+        resultDiv.style.display = 'block';
+        highlightSearchTerm(searchTerm);
+        setTimeout(() => resultDiv.style.display = 'none', 5000);
+    }
+}
+
+function filterAvisByNote(note) {
+    const cards = document.querySelectorAll('.avis-card');
+    cards.forEach(card => card.style.display = parseInt(card.dataset.note) >= note ? '' : 'none');
+}
+
+function filterAvisByText(searchText) {
+    const cards = document.querySelectorAll('.avis-card');
+    const searchLower = searchText.toLowerCase();
+    cards.forEach(card => {
+        const comment = card.dataset.commentaire;
+        const nom = card.dataset.nom;
+        card.style.display = (comment.includes(searchLower) || nom.includes(searchLower)) ? '' : 'none';
+    });
+}
+
+function resetSearch() {
+    document.querySelectorAll('.avis-card').forEach(card => card.style.display = '');
+    document.getElementById('filterNote').value = '0';
+    removeHighlights();
+}
+
+function highlightSearchTerm(term) {
+    removeHighlights();
+    const cards = document.querySelectorAll('.avis-card');
+    const regex = new RegExp(`(${term})`, 'gi');
+    cards.forEach(card => {
+        const commentElement = card.querySelector('.comment-text');
+        if (commentElement && commentElement.innerText.toLowerCase().includes(term.toLowerCase())) {
+            commentElement.innerHTML = commentElement.innerText.replace(regex, '<mark class="highlight">$1</mark>');
+        }
+    });
+}
+
+function removeHighlights() {
+    document.querySelectorAll('.comment-text mark').forEach(mark => {
+        const parent = mark.parentNode;
+        parent.innerHTML = parent.innerText;
+    });
+}
+
+// ========== DICTÉE VOCALE POUR LE COMMENTAIRE ==========
+function initMicDictation() {
+    const micBtn = document.getElementById('micBtn');
+    const stopMicBtn = document.getElementById('stopMicBtn');
+    const listeningIndicator = document.getElementById('listeningIndicator');
+    const commentaireInput = document.getElementById('commentaire-input');
+    
+    if (!micBtn || !('webkitSpeechRecognition' in window)) return;
+    
+    let recognition = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    micBtn.addEventListener('click', function() {
+        if (recognition) {
+            recognition.stop();
+            return;
+        }
+        
+        recognition = new SpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        
+        recognition.onstart = function() {
+            micBtn.style.display = 'none';
+            stopMicBtn.style.display = 'inline-flex';
+            listeningIndicator.style.display = 'block';
+            commentaireInput.classList.add('listening');
+        };
+        
+        recognition.onresult = function(event) {
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+            }
+            if (finalTranscript) {
+                let currentText = commentaireInput.value;
+                if (currentText && !currentText.endsWith(' ') && !currentText.endsWith('\n')) currentText += ' ';
+                commentaireInput.value = currentText + finalTranscript;
+            }
+        };
+        
+        recognition.onerror = function() { resetMic(); };
+        recognition.onend = function() { resetMic(); };
+        
+        recognition.start();
+    });
+    
+    stopMicBtn.addEventListener('click', function() { if (recognition) recognition.stop(); });
+    
+    function resetMic() {
+        micBtn.style.display = 'inline-flex';
+        stopMicBtn.style.display = 'none';
+        listeningIndicator.style.display = 'none';
+        commentaireInput.classList.remove('listening');
+        if (recognition) recognition = null;
+    }
+}
+
+// ========== TRADUCTION DES COMMENTAIRES ==========
+function initTranslation() {
+    document.querySelectorAll('.translate-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const avisId = this.dataset.id;
+            const targetLang = this.dataset.lang;
+            const translationDiv = document.getElementById(`translation-${avisId}`);
+            const loader = translationDiv.querySelector('.translation-loader');
+            const translatedTextSpan = translationDiv.querySelector('.translated-text');
+            
+            const oldInfo = translationDiv.querySelector('.lang-info');
+            if (oldInfo) oldInfo.remove();
+            
+            loader.style.display = 'inline';
+            translationDiv.style.display = 'block';
+            translatedTextSpan.textContent = '';
+            
+            fetch(`/avis/translate/${avisId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lang: targetLang })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                if (data.success && data.translated) {
+                    translatedTextSpan.textContent = data.translated;
+                    
+                    const langNames = { fr: 'Français', en: 'English', es: 'Español', ar: 'العربية', de: 'Deutsch', it: 'Italiano' };
+                    const sourceName = langNames[data.source_lang] || data.source_lang;
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'lang-info small text-muted mb-1';
+                    infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> Traduit du ${sourceName}`;
+                    if (data.is_fallback) infoDiv.innerHTML += ` <span class="badge bg-warning text-dark">traduction simplifiée</span>`;
+                    translationDiv.querySelector('.bg-light').insertBefore(infoDiv, translationDiv.querySelector('.d-flex'));
+                } else {
+                    translatedTextSpan.textContent = '❌ Service de traduction temporairement indisponible';
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                translatedTextSpan.textContent = '❌ Erreur de connexion';
+            });
+        });
+    });
+}
+</script>
+{% endblock %}

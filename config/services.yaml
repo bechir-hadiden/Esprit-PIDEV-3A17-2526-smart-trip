@@ -1,0 +1,28 @@
+parameters:
+    admin_email: '%env(ADMIN_EMAIL)%'
+    app.base_url: 'http://localhost:8000'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    App\Service\PhotoService:
+        arguments:
+            $unsplashAccessKey: '%env(UNSPLASH_ACCESS_KEY)%'
+
+    App\Service\FlightService:
+        arguments:
+            $aviationStackApiKey: '%env(AVIATIONSTACK_API_KEY)%'
+    App\Service\BoardingPassService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $adminEmail: '%admin_email%'
+            $baseUrl: '%app.base_url%'

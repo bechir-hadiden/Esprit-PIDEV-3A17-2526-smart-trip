@@ -1,0 +1,373 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes réservations - SmartTrip{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .reservation-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .reservation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .status-confirmed { background: #28a745; color: white; }
+        .status-cancelled { background: #dc3545; color: white; }
+        .status-pending { background: #ffc107; color: #333; }
+        .flight-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .qr-preview {
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .qr-preview:hover {
+            transform: scale(1.05);
+        }
+        .modal-qr {
+            max-width: 300px;
+        }
+        .filter-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .empty-state i {
+            font-size: 64px;
+            color: #dee2e6;
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-ticket-alt me-2 text-primary"></i>Mes réservations
+        </h1>
+        <a href="{{ path('app_avis_index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-search me-1"></i> Nouvelle réservation
+        </a>
+    </div>
+
+    <!-- Messages flash -->
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <!-- Barre de filtres -->
+    <div class="filter-bar">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher par destination ou vol...">
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="all">📊 Tous les statuts</option>
+                    <option value="confirmed">✅ Confirmées</option>
+                    <option value="cancelled">❌ Annulées</option>
+                    <option value="pending">⏳ En attente</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="sortFilter" class="form-select">
+                    <option value="date_desc">🕐 Plus récentes</option>
+                    <option value="date_asc">🕐 Plus anciennes</option>
+                    <option value="price_desc">💰 Prix décroissant</option>
+                    <option value="price_asc">💰 Prix croissant</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <i class="fas fa-undo-alt me-1"></i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des réservations -->
+    {% if reservations|length > 0 %}
+        <div class="row" id="reservationsContainer">
+            {% for reservation in reservations %}
+            <div class="col-md-6 mb-4 reservation-item" 
+                 data-status="{{ reservation.status }}"
+                 data-destination="{{ reservation.destination|lower }}"
+                 data-flight="{{ reservation.flightNumber|lower }}"
+                 data-date="{{ reservation.reservationDate.timestamp }}"
+                 data-price="{{ reservation.totalPrice }}">
+                <div class="card reservation-card border-0 shadow-sm rounded-3 h-100">
+                    <!-- En-tête avec compagnie et statut -->
+                    <div class="card-header bg-white border-0 pt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="flight-icon">
+                                    <i class="fas fa-plane"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">{{ reservation.airline }}</h5>
+                                    <small class="text-muted">{{ reservation.flightNumber }}</small>
+                                </div>
+                            </div>
+                            <span class="status-badge status-{{ reservation.status }}">
+                                {% if reservation.status == 'confirmed' %}
+                                    <i class="fas fa-check-circle me-1"></i> Confirmé
+                                {% elseif reservation.status == 'cancelled' %}
+                                    <i class="fas fa-times-circle me-1"></i> Annulé
+                                {% else %}
+                                    <i class="fas fa-clock me-1"></i> En attente
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Destination -->
+                        <h4 class="mb-3">
+                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                            {{ reservation.destination }}
+                        </h4>
+
+                        <!-- Informations vol -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <small class="text-muted">Départ</small>
+                                    <div class="fw-bold">{{ reservation.departureAirport }}</div>
+                                    <div class="small">{{ reservation.departureTime|date('d/m/Y H:i') }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <small class="text-muted">Arrivée</small>
+                                    <div class="fw-bold">{{ reservation.arrivalAirport }}</div>
+                                    <div class="small">{{ reservation.arrivalTime|date('d/m/Y H:i') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Passager et prix -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <small class="text-muted">Passager</small>
+                                <div class="fw-bold">{{ reservation.nomClient }}</div>
+                                <small class="text-muted">{{ reservation.email }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Prix total</small>
+                                <div class="h5 text-primary mb-0">{{ reservation.totalPrice }} €</div>
+                                <small>{{ reservation.numberOfPassengers }} passager(s)</small>
+                            </div>
+                        </div>
+
+                        <!-- QR Code preview (si confirmé) -->
+                        {% if reservation.status == 'confirmed' and reservation.boardingPassFile %}
+                        <div class="text-center mb-3">
+                            <img src="{{ asset('uploads/boarding_passes/' ~ reservation.boardingPassFile) }}" 
+                                 class="qr-preview" 
+                                 alt="QR Code"
+                                 data-bs-toggle="modal" 
+                                 data-bs-target="#qrModal{{ reservation.id }}">
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Boutons d'action -->
+                    <div class="card-footer bg-transparent border-0 pb-3">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ path('app_reservation_show', {'id': reservation.id}) }}" 
+                               class="btn btn-sm btn-outline-primary flex-grow-1">
+                                <i class="fas fa-eye me-1"></i> Détails
+                            </a>
+                            
+                            {% if reservation.status == 'confirmed' %}
+                                <a href="{{ path('app_reservation_boarding_pass', {'id': reservation.id}) }}" 
+                                   target="_blank" class="btn btn-sm btn-success flex-grow-1">
+                                    <i class="fas fa-ticket-alt me-1"></i> Billet
+                                </a>
+                                
+                                {% if not reservation.boardingPassSent %}
+                                <form method="post" action="{{ path('app_reservation_send_boarding_pass', {'id': reservation.id}) }}" 
+                                      style="display: inline; flex-grow: 1;">
+                                    <button class="btn btn-sm btn-info w-100" onclick="return confirm('Envoyer le billet par email ?')">
+                                        <i class="fas fa-envelope me-1"></i> Email
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary w-100" disabled>
+                                    <i class="fas fa-check me-1"></i> Envoyé
+                                </button>
+                                {% endif %}
+                                
+                                {% if reservation.cancellable %}
+                                <form method="post" action="{{ path('app_reservation_cancel', {'id': reservation.id}) }}" 
+                                      style="display: inline; flex-grow: 1;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ reservation.id) }}">
+                                    <button class="btn btn-sm btn-danger w-100" onclick="return confirm('Annuler cette réservation ?')">
+                                        <i class="fas fa-times me-1"></i> Annuler
+                                    </button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal QR Code -->
+            {% if reservation.status == 'confirmed' and reservation.boardingPassFile %}
+            <div class="modal fade" id="qrModal{{ reservation.id }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-qr">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-qrcode me-2"></i>QR Code - {{ reservation.flightNumber }}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{{ asset('uploads/boarding_passes/' ~ reservation.boardingPassFile) }}" 
+                                 alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                            <p class="mt-3 mb-0 small text-muted">
+                                Présentez ce code à l'embarquement
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            <a href="{{ path('app_reservation_boarding_pass', {'id': reservation.id}) }}" 
+                               target="_blank" class="btn btn-primary">
+                                <i class="fas fa-print me-1"></i> Imprimer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- État vide -->
+        <div class="empty-state">
+            <i class="fas fa-ticket-alt"></i>
+            <h3>Aucune réservation</h3>
+            <p class="text-muted">Vous n'avez pas encore effectué de réservation.</p>
+            <a href="{{ path('app_avis_index') }}" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i> Découvrir des voyages
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Filtres et tri
+    function filterAndSort() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const sortFilter = document.getElementById('sortFilter').value;
+        
+        const items = Array.from(document.querySelectorAll('.reservation-item'));
+        
+        // Filtrer
+        const filtered = items.filter(item => {
+            const destination = item.dataset.destination;
+            const flight = item.dataset.flight;
+            const status = item.dataset.status;
+            
+            const matchesSearch = searchTerm === '' || destination.includes(searchTerm) || flight.includes(searchTerm);
+            const matchesStatus = statusFilter === 'all' || status === statusFilter;
+            
+            return matchesSearch && matchesStatus;
+        });
+        
+        // Trier
+        filtered.sort((a, b) => {
+            switch(sortFilter) {
+                case 'date_desc':
+                    return b.dataset.date - a.dataset.date;
+                case 'date_asc':
+                    return a.dataset.date - b.dataset.date;
+                case 'price_desc':
+                    return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                case 'price_asc':
+                    return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                default:
+                    return 0;
+            }
+        });
+        
+        // Réafficher
+        const container = document.getElementById('reservationsContainer');
+        container.innerHTML = '';
+        filtered.forEach(item => container.appendChild(item));
+        
+        // Afficher message si aucun résultat
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Aucune réservation ne correspond à vos critères.
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('sortFilter').value = 'date_desc';
+        filterAndSort();
+    }
+    
+    // Écouteurs d'événements
+    document.getElementById('searchInput').addEventListener('input', filterAndSort);
+    document.getElementById('statusFilter').addEventListener('change', filterAndSort);
+    document.getElementById('sortFilter').addEventListener('change', filterAndSort);
+    
+    // Animation au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.reservation-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    });
+</script>
+{% endblock %}

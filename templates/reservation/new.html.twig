@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réserver un vol - SmartTrip{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Réserver votre vol</h4>
+                </div>
+                <div class="card-body p-4">
+                    {% if flight %}
+                    <div class="alert alert-info mb-4">
+                        <h5 class="mb-2"><i class="fas fa-plane me-2"></i>Détails du vol</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Compagnie:</strong> {{ flight.airline }}<br>
+                                <strong>Vol:</strong> {{ flight.flightNumber }}<br>
+                                <strong>Destination:</strong> {{ flight.destination }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Départ:</strong> {{ flight.departureAirport }} à {{ flight.departureTime|date('H:i') }}<br>
+                                <strong>Arrivée:</strong> {{ flight.arrivalAirport }} à {{ flight.arrivalTime|date('H:i') }}<br>
+                                <strong>Prix:</strong> {{ flight.price }} EUR
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.nomClient) }}
+                            {{ form_widget(form.nomClient) }}
+                            {{ form_errors(form.nomClient) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.email) }}
+                            {{ form_widget(form.email) }}
+                            {{ form_errors(form.email) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.telephone) }}
+                            {{ form_widget(form.telephone) }}
+                            {{ form_errors(form.telephone) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.numberOfPassengers) }}
+                            {{ form_widget(form.numberOfPassengers) }}
+                            {{ form_errors(form.numberOfPassengers) }}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-1"></i> Confirmer la réservation
+                        </button>
+                        <a href="{{ path('app_destination_show', {'destination': flight.destination}) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Retour
+                        </a>
+                    </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
