@@ -1,568 +1,633 @@
+{# templates/destination/show.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ destination }} - SmartTrip{% endblock %}
+{% block title %}VoyageÉlite - {{ destination }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Styles généraux */
-        .weather-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: transform 0.3s;
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --ink:      #0d0d0d;
+            --sand:     #f0e8d8;
+            --cream:    #faf6ef;
+            --gold:     #b8963e;
+            --gold-lt:  #d4b06a;
+            --muted:    #6b6560;
+            --white:    #ffffff;
+            --chat-bg:  #1a1714;
         }
-        .weather-card:hover { transform: translateY(-5px); }
-        .weather-icon { font-size: 48px; }
-        
-        .forecast-card {
-            background: white;
-            border-radius: 15px;
-            padding: 12px;
-            text-align: center;
-            transition: transform 0.2s;
-            border: 1px solid #e9ecef;
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
         }
-        .forecast-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        
-        .stat-badge {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .stat-badge:hover { transform: translateY(-2px); background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .stat-value { font-size: 2rem; font-weight: bold; }
-        
-        .review-card {
-            transition: transform 0.2s;
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .review-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        
+
+        /* HEADER DESTINATION */
         .destination-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        /* Carte */
-        #map {
-            height: 400px;
-            width: 100%;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        /* Galerie photo défilante */
-        .gallery-scroll {
             position: relative;
-            margin-top: 15px;
-        }
-        .gallery-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #495057;
+            height: 60vh;
+            min-height: 500px;
+            background: var(--ink);
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-        .gallery-title i { color: #0d6efd; }
-        .scroll-container {
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            white-space: nowrap;
-            padding: 5px 0;
-            border-radius: 12px;
-        }
-        .scroll-container::-webkit-scrollbar {
-            height: 6px;
-        }
-        .scroll-container::-webkit-scrollbar-track {
-            background: #e9ecef;
-            border-radius: 10px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb {
-            background: #0d6efd;
-            border-radius: 10px;
-        }
-        .scroll-item {
-            display: inline-block;
-            margin-right: 12px;
-            width: 100px;
-            height: 100px;
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
-        }
-        .scroll-item:hover {
-            transform: scale(1.05);
-        }
-        .scroll-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .scroll-item-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.6));
-            padding: 5px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .scroll-item:hover .scroll-item-overlay {
-            opacity: 1;
-        }
-        .scroll-item-overlay small {
-            color: white;
-            font-size: 10px;
-            display: block;
+            justify-content: center;
             text-align: center;
+            color: var(--white);
+            margin-bottom: 4rem;
         }
-        
-        /* Vols */
-        .flights-list {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .flights-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .flights-list::-webkit-scrollbar-track {
-            background: #e9ecef;
-            border-radius: 10px;
-        }
-        .flights-list::-webkit-scrollbar-thumb {
-            background: #0d6efd;
-            border-radius: 10px;
-        }
-        .flight-item {
-            transition: all 0.2s ease;
-            background: #f8f9fa;
-        }
-        .flight-item:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
-        
-        /* Modal photo */
-        .photo-modal {
-            position: fixed;
+        .destination-header-bg {
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1100;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.5;
+        }
+        .destination-header-content {
+            position: relative;
+            z-index: 2;
+        }
+        .destination-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 4rem;
+            font-weight: 300;
+            letter-spacing: 0.02em;
+            margin-bottom: 1rem;
+        }
+        .destination-header p {
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gold-lt);
+        }
+        .back-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 3;
+            color: var(--white);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.4);
+            padding: 0.5rem 1rem;
+            backdrop-filter: blur(8px);
+            transition: background 0.2s;
+        }
+        .back-link:hover {
+            background: rgba(0,0,0,0.6);
+            color: var(--gold);
+        }
+
+        /* CONTAINER */
+        .container-custom {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: -0.01em;
+        }
+        .section-title span {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        /* METEO CARD */
+        .weather-card {
+            background: var(--white);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .weather-temp-large {
+            font-size: 3.5rem;
+            font-weight: 300;
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .forecast-item {
+            text-align: center;
+            padding: 0.5rem;
+        }
+        .forecast-day {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .forecast-temp {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* TIPS */
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        .tips-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 0.5px solid rgba(184,150,62,0.2);
+        }
+        .tips-list li i {
+            color: var(--gold);
+            width: 24px;
+        }
+
+        /* CARTE AVIS */
+        .avis-card-destination {
+            background: var(--white);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+        .avis-card-destination:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .avis-header-destination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .avis-author-destination {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .avis-avatar-destination {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-lt));
             display: flex;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.2s;
-        }
-        .photo-modal-content {
-            position: relative;
-            max-width: 90%;
-            max-height: 90%;
-        }
-        .modal-image {
-            max-width: 100%;
-            max-height: 80vh;
-            border-radius: 8px;
-        }
-        .photo-modal-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: white;
-            font-size: 35px;
-            cursor: pointer;
-        }
-        .modal-caption { color: white; text-align: center; margin-top: 15px; }
-        
-        .section-title {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
+            color: var(--ink);
+            border-radius: 50%;
+        }
+        .avis-stars-destination i {
+            color: var(--gold);
+        }
+        .avis-stars-destination i.far { color: #ddd; }
+
+        /* PHOTOS GRID */
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .photo-item {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 1;
+        }
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        .photo-item:hover img {
+            transform: scale(1.05);
+        }
+        .photo-credit {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .photo-item:hover .photo-credit {
+            opacity: 1;
+        }
+
+        /* FLIGHTS TABLE AVEC BOUTON RESERVER */
+        .flights-section {
+            background: var(--white);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .flights-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .flights-table th, .flights-table td {
+            padding: 1rem 0.75rem;
+            text-align: left;
+            border-bottom: 0.5px solid rgba(184,150,62,0.2);
+            vertical-align: middle;
+        }
+        .flights-table th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            background: rgba(184,150,62,0.05);
+        }
+        .flight-price {
+            font-weight: 600;
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+        .flight-airline {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.5rem;
         }
-        .section-title i { color: #0d6efd; font-size: 1.8rem; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .flight-airline i {
+            font-size: 1.2rem;
+            color: var(--gold);
         }
-        
+        .btn-book {
+            background: var(--gold);
+            color: var(--ink);
+            border: none;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0;
+        }
+        .btn-book:hover {
+            background: var(--ink);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+        .btn-book i {
+            font-size: 0.7rem;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--gold);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+
+        /* MAP */
+        #map {
+            height: 300px;
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        /* BUTTON */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--gold);
+            color: var(--ink);
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-back:hover {
+            background: var(--ink);
+            color: var(--white);
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .scroll-item { width: 80px; height: 80px; }
-            .section-title { font-size: 1.2rem; }
-            .flight-item { flex-direction: column; text-align: center; }
-            .flight-item .d-flex { justify-content: center; margin-bottom: 10px; }
+            .destination-header h1 { font-size: 2.5rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .photos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            .container-custom { padding: 0 1rem; }
+            .flights-table th, .flights-table td { padding: 0.5rem; font-size: 0.75rem; }
+            .btn-book { padding: 0.3rem 0.8rem; font-size: 0.65rem; }
+            .flight-price { font-size: 0.9rem; }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .flight-row {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <!-- En-tête destination -->
-    <div class="destination-header">
-        <h1 class="display-5 mb-2">
-            <i class="fas fa-map-marker-alt me-2"></i>{{ location.city }}, {{ location.country }}
-        </h1>
-        <p class="mb-0 opacity-75">
-            <i class="fas fa-location-dot me-1"></i>{{ location.formatted_address }}
-        </p>
+<!-- HEADER DESTINATION -->
+<div class="destination-header">
+    <div class="destination-header-bg" style="background-image: url('{{ unsplashPhotos|length > 0 ? unsplashPhotos[0].url : '' }}');"></div>
+    <div class="destination-header-content">
+        <h1>{{ destination }}</h1>
+        <p><i class="fas fa-map-marker-alt"></i> {{ location.country ?? location.formatted_address|slice(0, 50) }}</p>
     </div>
+    <a href="{{ path('app_avis_index') }}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Retour aux avis
+    </a>
+</div>
 
-    <!-- CARTE -->
-    <div class="map-container mb-4">
-        <div class="section-title">
-            <i class="fas fa-map"></i>
-            <span>Localisation sur la carte</span>
+<div class="container-custom">
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Avis voyageurs</div>
         </div>
-        <div id="map"></div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.moyenne|number_format(1) }}/5</div>
+            <div class="stat-label">Note moyenne</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.positifs }}%</div>
+            <div class="stat-label">Avis positifs</div>
+        </div>
     </div>
 
-    <div class="row">
-        <!-- COLONNE GAUCHE : Météo + Photos -->
-        <div class="col-md-4">
-            <!-- Météo -->
+    <div class="row g-4">
+        <!-- COLONNE GAUCHE -->
+        <div class="col-md-5">
+            <!-- METEO -->
+            {% if weather %}
             <div class="weather-card">
-                <h5 class="mb-3">
-                    <i class="fas fa-cloud-sun me-2"></i>Météo actuelle
-                </h5>
-                {% if weather %}
-                    <div class="text-center my-3">
-                        <i class="fas {{ weather.icon }} weather-icon mb-2"></i>
-                        <div class="display-1 fw-bold">{{ weather.temperature }}°C</div>
-                        <p class="lead mb-0">{{ weather.description|capitalize }}</p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="weather-temp-large">{{ weather.temperature }}°C</div>
+                        <div>{{ weather.description|capitalize }}</div>
+                        <div><i class="fas fa-tint"></i> Humidité: {{ weather.humidity }}%</div>
+                        <div><i class="fas fa-wind"></i> Vent: {{ weather.windspeed }} km/h</div>
                     </div>
-                    <div class="row text-center mt-3">
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-25 rounded p-2">
-                                <i class="fas fa-wind"></i>
-                                <div class="fw-bold">{{ weather.windspeed }} km/h</div>
-                                <small>Vent</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-25 rounded p-2">
-                                <i class="fas fa-tint"></i>
-                                <div class="fw-bold">{{ weather.humidity ?? 'N/A' }}%</div>
-                                <small>Humidité</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% if tips|length %}
-                    <div class="mt-3 pt-3 border-top border-light">
-                        <small class="fw-bold">💡 Conseils pour votre visite:</small>
-                        {% for tip in tips %}
-                            <div class="small mt-1">• {{ tip }}</div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                {% else %}
-                    <p class="text-center">Météo non disponible</p>
-                {% endif %}
-            </div>
-
-            <!-- GALERIE PHOTOS DÉFILANTE -->
-            {% set allPhotos = [] %}
-            {% if unsplashPhotos|length > 0 %}
-                {% set allPhotos = unsplashPhotos|slice(0, 10) %}
-            {% endif %}
-            {% if photos|length > 0 and allPhotos|length < 10 %}
-                {% set remaining = 10 - allPhotos|length %}
-                {% set allPhotos = allPhotos|merge(photos|slice(0, remaining)) %}
-            {% endif %}
-            
-            {% if allPhotos|length > 0 %}
-            <div class="card border-0 shadow-sm rounded-3 mt-3">
-                <div class="card-body">
-                    <div class="gallery-title">
-                        <i class="fas fa-images"></i>
-                        <span>Photos de la destination</span>
-                        <span class="badge bg-primary rounded-pill ms-auto">{{ allPhotos|length }}</span>
-                    </div>
-                    <div class="gallery-scroll">
-                        <div class="scroll-container">
-                            {% for photo in allPhotos %}
-                            <div class="scroll-item" onclick="openPhotoModal('{{ photo.url }}', '{{ photo.description }}', '{{ photo.photographer }}')">
-                                <img src="{{ photo.thumb }}" alt="{{ photo.description }}">
-                                <div class="scroll-item-overlay">
-                                    <small><i class="fas fa-camera"></i></small>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
+                    <div>
+                        <i class="fas {{ weather.icon }} fa-4x" style="color: var(--gold);"></i>
                     </div>
                 </div>
+                {% if forecast %}
+                <hr>
+                <div class="row mt-3">
+                    {% for day in forecast|slice(0, 5) %}
+                    <div class="col">
+                        <div class="forecast-item">
+                            <div class="forecast-day">{{ day.date|date('D') }}</div>
+                            <i class="fas {{ day.icon }}"></i>
+                            <div class="forecast-temp">{{ day.temp_max }}°</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
             {% endif %}
 
-            <!-- Prévisions 5 jours -->
-            {% if forecast|length %}
-            <div class="card border-0 shadow-sm rounded-3 mt-3">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-calendar-week me-2 text-primary"></i>Prévisions 5 jours
-                    </h5>
-                    {% for day in forecast %}
-                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                        <div>
-                            <small class="fw-bold">{{ day.date|date('d/m') }}</small>
-                            <i class="fas {{ day.icon }} ms-2 text-secondary"></i>
-                        </div>
-                        <div>
-                            <span class="text-danger fw-bold">{{ day.temp_max }}°</span>
-                            <span class="text-muted ms-1">{{ day.temp_min }}°</span>
-                        </div>
+            <!-- CONSEILS METEO -->
+            {% if tips|length > 0 %}
+            <div class="weather-card">
+                <h3 class="section-title" style="font-size: 1.2rem;">💡 <span>Conseils</span> pratiques</h3>
+                <ul class="tips-list">
+                    {% for tip in tips %}
+                    <li><i class="fas fa-lightbulb"></i> {{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- LOCALISATION -->
+            <div class="weather-card">
+                <h3 class="section-title" style="font-size: 1.2rem;"><i class="fas fa-map"></i> <span>Localisation</span></h3>
+                <div id="map"></div>
+                <p class="small text-muted mt-2">
+                    <i class="fas fa-map-pin"></i> {{ location.formatted_address }}
+                </p>
+            </div>
+        </div>
+
+        <!-- COLONNE DROITE -->
+        <div class="col-md-7">
+            <!-- VOLS AVEC BOUTON RESERVER -->
+            {% if flights is defined and flights.success and flights.flights|length > 0 %}
+            <div class="flights-section">
+                <h3 class="section-title" style="font-size: 1.2rem;">✈️ <span>Vols</span> vers {{ destination }}</h3>
+                <div style="max-height: 500px; overflow-y: auto;">
+                    <table class="flights-table">
+                        <thead>
+                            <tr>
+                                <th>Compagnie</th>
+                                <th>Vol</th>
+                                <th>Départ</th>
+                                <th>Arrivée</th>
+                                <th>Durée</th>
+                                <th>Prix</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for flight in flights.flights %}
+                            <tr class="flight-row">
+                                <td class="flight-airline">
+                                    <i class="fas fa-plane"></i>
+                                    {{ flight.airline }}
+                                </td>
+                                <td>{{ flight.flight_number }}</td>
+                                <td>
+                                    {{ flight.departure.city }}<br>
+                                    <small class="text-muted">{{ flight.departure.time|date('H:i') }}</small>
+                                </td>
+                                <td>
+                                    {{ flight.arrival.city }}<br>
+                                    <small class="text-muted">{{ flight.arrival.time|date('H:i') }}</small>
+                                </td>
+                                <td>-</td>
+                                <td class="flight-price">{{ flight.price }} €</td>
+                                <td>
+                                    <a href="{{ path('app_reservation_new', {
+                                        destination: destination,
+                                        airline: flight.airline,
+                                        flightNumber: flight.flight_number,
+                                        departureAirport: flight.departure.airport,
+                                        arrivalAirport: flight.arrival.airport,
+                                        price: flight.price,
+                                        departureTime: flight.departure.time|date('Y-m-d H:i:s'),
+                                        arrivalTime: flight.arrival.time|date('Y-m-d H:i:s')
+                                    }) }}" class="btn-book">
+                                        <i class="fas fa-ticket-alt"></i> Réserver
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if airportCode %}
+                <p class="small text-muted mt-3 mb-0">
+                    <i class="fas fa-ticket-alt"></i> Code aéroport: {{ airportCode }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- PHOTOS UNSPLASH -->
+            {% if unsplashPhotos|length > 0 %}
+            <div class="weather-card">
+                <h3 class="section-title" style="font-size: 1.2rem;">📸 <span>Photos</span> de {{ destination }}</h3>
+                <div class="photos-grid">
+                    {% for photo in unsplashPhotos|slice(0, 8) %}
+                    <div class="photo-item" onclick="openPhotoModal('{{ photo.url }}', '{{ photo.photographer }}')">
+                        <img src="{{ photo.thumb }}" alt="{{ photo.description }}">
+                        <div class="photo-credit">📷 {{ photo.photographer }}</div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
         </div>
+    </div>
 
-        <!-- COLONNE DROITE : AVIS ET VOLS -->
-        <div class="col-md-8">
-            <!-- Statistiques -->
-            <div class="row g-3 mb-4">
-                <div class="col-4">
-                    <div class="stat-badge">
-                        <div class="stat-value text-primary">{{ stats.total }}</div>
-                        <small class="text-muted">Avis publiés</small>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-badge">
-                        <div class="stat-value text-warning">{{ stats.moyenne|number_format(1) }}/5</div>
-                        <small class="text-muted">Note moyenne</small>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="stat-badge">
-                        <div class="stat-value text-success">{{ stats.positifs }}</div>
-                        <small class="text-muted">Avis positifs</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VOLS VERS LA DESTINATION -->
-            {% if flights.flights is defined and flights.flights|length > 0 %}
-            <div class="card border-0 shadow-sm rounded-3 mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="gallery-title">
-                            <i class="fas fa-plane-departure"></i>
-                            <span>Vols vers {{ location.city }} ({{ airportCode }})</span>
-                            <span class="badge bg-primary rounded-pill ms-2">{{ flights.count }} vols</span>
-                        </div>
-                        {% if flights.source == 'demo' %}
-                        <span class="badge bg-warning text-dark">Données indicatives</span>
-                        {% else %}
-                        <span class="badge bg-success">Données en temps réel</span>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="flights-list">
-                        {% for flight in flights.flights %}
-                        <div class="flight-item d-flex justify-content-between align-items-center p-3 mb-2 rounded-3 border">
-                            <div class="d-flex align-items-center gap-4 flex-wrap">
-                                <div class="text-center" style="min-width: 100px;">
-                                    <i class="fas fa-plane text-primary fa-lg"></i>
-                                    <div class="fw-bold">{{ flight.airline }}</div>
-                                    <small class="text-muted">{{ flight.flight_number }}</small>
-                                </div>
-                                <div class="text-center">
-                                    <div class="h5 mb-0 fw-bold">{{ flight.departure.time|date('H:i') }}</div>
-                                    <div><small>{{ flight.departure.airport }}</small></div>
-                                    <div><small class="text-muted">{{ flight.departure.city }}</small></div>
-                                </div>
-                                <div class="text-center">
-                                    <i class="fas fa-arrow-right text-muted fa-lg"></i>
-                                </div>
-                                <div class="text-center">
-                                    <div class="h5 mb-0 fw-bold">{{ flight.arrival.time|date('H:i') }}</div>
-                                    <div><small>{{ flight.arrival.airport }}</small></div>
-                                    <div><small class="text-muted">{{ flight.arrival.city }}</small></div>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="h4 mb-0 text-primary fw-bold">{{ flight.price }} {{ flight.currency }}</div>
-                                <small class="text-muted">{{ flight.status }}</small>
-                                <div class="mt-2">
-                                    <a href="{{ path('app_reservation_new', {
-                                        'destination': flight.arrival.city,
-                                        'airline': flight.airline,
-                                        'flightNumber': flight.flight_number,
-                                        'departureAirport': flight.departure.airport,
-                                        'departureTime': flight.departure.time,
-                                        'arrivalAirport': flight.arrival.airport,
-                                        'arrivalTime': flight.arrival.time,
-                                        'price': flight.price
-                                    }) }}" class="btn btn-primary btn-sm w-100">
-                                        <i class="fas fa-ticket-alt me-1"></i> Réserver
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
-                            {% if flights.source == 'demo' %}
-                            Prix indicatifs - Vérifiez les disponibilités auprès des compagnies
-                            {% else %}
-                            Données fournies par AviationStack - Prix et disponibilités sous réserve
-                            {% endif %}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Liste des avis -->
-            <h5 class="mb-3">
-                <i class="fas fa-comments me-2 text-primary"></i>Avis des voyageurs
-            </h5>
-
+    <!-- AVIS DES VOYAGEURS -->
+    <div class="weather-card" style="margin-top: 2rem;">
+        <h3 class="section-title"><i class="fas fa-star"></i> <span>Avis</span> des voyageurs</h3>
+        
+        {% if avis|length > 0 %}
             {% for avi in avis %}
-            <div class="card review-card rounded-3 mb-3">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="avis-card-destination">
+                <div class="avis-header-destination">
+                    <div class="avis-author-destination">
+                        <div class="avis-avatar-destination">{{ avi.nomClient|slice(0, 1)|upper }}</div>
                         <div>
-                            <h6 class="fw-bold mb-0">{{ avi.nomClient }}</h6>
-                            <small class="text-muted">
-                                <i class="far fa-calendar-alt me-1"></i>{{ avi.dateAvis|date('d/m/Y') }}
-                            </small>
-                        </div>
-                        <div>
-                            {% for i in 1..5 %}
-                                {% if i <= avi.note %}<i class="fas fa-star text-warning small"></i>{% else %}<i class="far fa-star text-warning small"></i>{% endif %}
-                            {% endfor %}
-                            <span class="ms-1 small">{{ avi.note }}/5</span>
+                            <strong>{{ avi.nomClient }}</strong>
+                            <div class="small text-muted">{{ avi.dateAvis|date('d/m/Y') }}</div>
                         </div>
                     </div>
-                    <p class="text-muted mb-2 small">{{ avi.commentaire }}</p>
-                    
-                    <!-- Photos de l'avis -->
-                    {% if avi.photos and avi.photos|length %}
-                    <div class="mt-2 d-flex gap-1 overflow-auto" style="max-height: 70px;">
-                        {% for photo in avi.photos|slice(0, 4) %}
-                        <img src="{{ photo.thumb }}" alt="{{ photo.description }}" 
-                             class="rounded-3" style="width: 60px; height: 60px; object-fit: cover; cursor: pointer; transition: transform 0.2s;"
-                             onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"
-                             onclick="openPhotoModal('{{ photo.url }}', '{{ photo.description }}', '{{ photo.photographer }}')">
+                    <div class="avis-stars-destination">
+                        {% for i in 1..5 %}
+                            {% if i <= avi.note %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
                         {% endfor %}
-                        {% if avi.photos|length > 4 %}
-                        <div class="d-flex align-items-center justify-content-center bg-light rounded-3" style="width: 60px; height: 60px;">
-                            <small>+{{ avi.photos|length - 4 }}</small>
-                        </div>
-                        {% endif %}
+                        <span class="ms-2">{{ avi.note }}/5</span>
                     </div>
-                    {% endif %}
-                    
-                    <!-- Météo au moment de l'avis -->
-                    {% if avi.weatherData %}
-                    <div class="small text-muted mt-2 pt-2 border-top">
-                        <i class="fas fa-cloud-sun me-1"></i>
-                        Météo lors de la visite: {{ avi.weatherData.temperature }}°C, {{ avi.weatherData.description }}
-                    </div>
-                    {% endif %}
                 </div>
-            </div>
-            {% else %}
-            <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle me-2"></i>
-                Aucun avis pour cette destination. <a href="{{ path('app_avis_index') }}">Soyez le premier à partager votre expérience !</a>
+                <p class="avis-commentaire" style="color: var(--muted); line-height: 1.6;">{{ avi.commentaire }}</p>
             </div>
             {% endfor %}
-
-            <div class="mt-4 text-center">
-                <a href="{{ path('app_avis_index') }}" class="btn btn-primary px-4 py-2">
-                    <i class="fas fa-plus me-2"></i>Partager mon expérience
-                </a>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x" style="color: var(--muted); margin-bottom: 1rem;"></i>
+                <p>Aucun avis pour cette destination. Soyez le premier à partager votre expérience !</p>
+                <a href="{{ path('app_avis_index') }}" class="btn-back" style="display: inline-flex; margin-top: 0;">Donner mon avis</a>
             </div>
-        </div>
+        {% endif %}
+    </div>
+
+    <!-- BOUTON RETOUR -->
+    <div class="text-center">
+        <a href="{{ path('app_avis_index') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Retour aux avis
+        </a>
     </div>
 </div>
 
 <!-- MODAL PHOTO -->
-<div id="photoModal" class="photo-modal" style="display: none;">
-    <div class="photo-modal-content">
-        <span class="photo-modal-close" onclick="closePhotoModal()">&times;</span>
-        <img id="modalImage" class="modal-image" src="">
-        <div class="modal-caption">
-            <p id="modalCaption"></p>
-            <small id="modalCredit"></small>
-        </div>
+<div id="photoModal" style="display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="position: relative; max-width: 90%; max-height: 90%;">
+        <button onclick="closePhotoModal()" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">&times;</button>
+        <img id="modalImage" style="max-width: 100%; max-height: 80vh; border-radius: 8px;">
+        <div id="modalCredit" style="color: white; text-align: center; margin-top: 1rem;"></div>
     </div>
 </div>
+{% endblock %}
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    // ========== CARTE ==========
-    var map = L.map('map').setView([{{ location.lat }}, {{ location.lng }}], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-    
-    var marker = L.marker([{{ location.lat }}, {{ location.lng }}]).addTo(map);
-    marker.bindPopup(`
-        <b>{{ location.city }}, {{ location.country }}</b><br>
-        {{ location.formatted_address|slice(0, 100) }}<br>
-        {% if weather %}<i class="fas fa-cloud-sun"></i> {{ weather.temperature }}°C - {{ weather.description }}{% endif %}
-    `).openPopup();
-    
-    var circle = L.circle([{{ location.lat }}, {{ location.lng }}], {
-        color: '#0d6efd',
-        fillColor: '#0d6efd',
-        fillOpacity: 0.1,
-        radius: 5000
-    }).addTo(map);
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Carte Leaflet
+        var map = L.map('map').setView([{{ location.lat }}, {{ location.lng }}], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+        L.marker([{{ location.lat }}, {{ location.lng }}]).addTo(map)
+            .bindPopup('<b>{{ destination }}</b><br>{{ location.formatted_address }}')
+            .openPopup();
 
-    // ========== MODAL PHOTO ==========
-    function openPhotoModal(url, caption, photographer) {
-        document.getElementById('modalImage').src = url;
-        document.getElementById('modalCaption').innerHTML = caption || 'Photo de la destination';
-        document.getElementById('modalCredit').innerHTML = '📸 Photo par ' + (photographer || 'Voyageur');
-        document.getElementById('photoModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        
+        // Modal photo
+        function openPhotoModal(url, photographer) {
+            document.getElementById('modalImage').src = url;
+            document.getElementById('modalCredit').innerHTML = '📸 Photo par ' + photographer;
+            document.getElementById('photoModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Fermer avec Echap
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closePhotoModal();
+            if (e.key === 'Escape') {
+                closePhotoModal();
+            }
         });
-    }
-
-    function closePhotoModal() {
-        document.getElementById('photoModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-    
-    document.getElementById('photoModal').addEventListener('click', function(e) {
-        if (e.target === this) closePhotoModal();
-    });
-</script>
+        
+        // Animation des lignes de vol
+        document.querySelectorAll('.flight-row').forEach((row, index) => {
+            row.style.animationDelay = (index * 0.05) + 's';
+        });
+    </script>
 {% endblock %}

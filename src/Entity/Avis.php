@@ -1,4 +1,5 @@
 <?php
+// src/Entity/Avis.php
 
 namespace App\Entity;
 
@@ -87,9 +88,14 @@ class Avis
     #[ORM\OneToMany(targetEntity: Vote::class, mappedBy: 'avis', orphanRemoval: true)]
     private Collection $votes;
 
+    // ========== RELATION SIGNALEMENT (NOUVEAU) ==========
+    #[ORM\OneToMany(targetEntity: Signalement::class, mappedBy: 'avis', orphanRemoval: true)]
+    private Collection $signalements;
+
     public function __construct()
     {
         $this->votes = new ArrayCollection();
+        $this->signalements = new ArrayCollection(); // AJOUTÉ
         $this->dateAvis = new \DateTime();
         $this->commentaires = [];
         $this->status = self::STATUS_PENDING;
@@ -392,7 +398,7 @@ class Avis
         return $this;
     }
 
-    // ========== RELATIONS ==========
+    // ========== RELATIONS VOTES ==========
 
     public function getVotes(): Collection
     {
@@ -416,6 +422,45 @@ class Avis
             }
         }
         return $this;
+    }
+
+    // ========== RELATIONS SIGNALEMENTS (NOUVEAU) ==========
+
+    /**
+     * @return Collection<int, Signalement>
+     */
+    public function getSignalements(): Collection
+    {
+        return $this->signalements;
+    }
+
+    public function addSignalement(Signalement $signalement): static
+    {
+        if (!$this->signalements->contains($signalement)) {
+            $this->signalements->add($signalement);
+            $signalement->setAvis($this);
+        }
+        return $this;
+    }
+
+    public function removeSignalement(Signalement $signalement): static
+    {
+        if ($this->signalements->removeElement($signalement)) {
+            if ($signalement->getAvis() === $this) {
+                $signalement->setAvis(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getNombreSignalements(): int
+    {
+        return $this->signalements->count();
+    }
+
+    public function hasSignalements(): bool
+    {
+        return $this->signalements->count() > 0;
     }
 
     // ========== MÉTHODE POUR AFFICHER LE STATUT EN TEXTE ==========

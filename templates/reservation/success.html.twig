@@ -1,200 +1,151 @@
+{# templates/reservation/success.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Réservation confirmée - SmartTrip{% endblock %}
+{% block title %}VoyageÉlite - Réservation confirmée{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --ink: #0d0d0d;
+            --sand: #f0e8d8;
+            --cream: #faf6ef;
+            --gold: #b8963e;
+            --gold-lt: #d4b06a;
+            --muted: #6b6560;
+            --white: #ffffff;
+        }
+        
+        body {
+            background: var(--cream);
+            font-family: 'DM Sans', sans-serif;
+        }
+        
         .success-container {
             max-width: 600px;
-            margin: 50px auto;
-        }
-        .success-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .success-header {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 40px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
             text-align: center;
         }
-        .success-header i {
-            font-size: 4rem;
-            margin-bottom: 15px;
+        
+        .success-card {
+            background: var(--white);
+            padding: 3rem 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-        .success-header h2 {
-            margin: 0;
-            font-size: 1.8rem;
-        }
-        .success-body {
-            padding: 30px;
-        }
-        .info-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .info-row {
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
             display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
         }
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        .info-value {
-            color: #28a745;
-            font-weight: 500;
-        }
-        .btn-custom {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        
+        .success-icon i {
+            font-size: 2.5rem;
             color: white;
-            padding: 12px 25px;
-            border-radius: 10px;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
         }
-        .btn-custom:hover {
+        
+        .success-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+        
+        .success-message {
+            color: var(--muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .reservation-number {
+            background: rgba(184,150,62,0.1);
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .reservation-number span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+        
+        .reservation-number strong {
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--gold);
+            color: var(--ink);
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            margin: 0 0.5rem;
+        }
+        
+        .btn-action:hover {
+            background: var(--ink);
+            color: var(--white);
             transform: translateY(-2px);
-            color: white;
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
         }
-        .btn-outline-custom {
-            border: 2px solid #667eea;
-            color: #667eea;
-            padding: 10px 20px;
-            border-radius: 10px;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
+        
+        .btn-outline {
+            background: none;
+            border: 0.5px solid rgba(184,150,62,0.3);
+            color: var(--ink);
         }
-        .btn-outline-custom:hover {
-            background: #667eea;
-            color: white;
+        
+        .btn-outline:hover {
+            background: var(--ink);
+            color: var(--white);
+            border-color: var(--ink);
         }
-        .alert-info {
-            background: #d1ecf1;
-            border: none;
-            border-radius: 10px;
-            color: #0c5460;
+        
+        @media (max-width: 768px) {
+            .success-container { padding: 6rem 1rem 2rem; }
+            .btn-action { display: block; margin: 0.5rem 0; text-align: center; }
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container">
-    <div class="success-container">
-        <div class="success-card">
-            <div class="success-header">
-                <i class="fas fa-check-circle"></i>
-                <h2>Réservation confirmée !</h2>
-                <p class="mb-0">Votre réservation a bien été enregistrée</p>
-            </div>
-            
-            <div class="success-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    Un email de confirmation vous a été envoyé. Votre réservation sera traitée dans les plus brefs délais.
-                </div>
-                
-                <div class="info-section">
-                    <h5><i class="fas fa-ticket-alt"></i> Détails de votre réservation</h5>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Numéro de réservation :</span>
-                        <span class="info-value">{{ reservation.reservationNumber }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Statut :</span>
-                        <span class="info-value">
-                            <span class="badge bg-warning text-dark">En attente de confirmation</span>
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Date de réservation :</span>
-                        <span class="info-value">{{ reservation.reservationDate|date('d/m/Y H:i') }}</span>
-                    </div>
-                </div>
-                
-                <div class="info-section">
-                    <h5><i class="fas fa-plane"></i> Détails du vol</h5>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Compagnie :</span>
-                        <span class="info-value">{{ reservation.airline }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Vol :</span>
-                        <span class="info-value">{{ reservation.flightNumber }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Destination :</span>
-                        <span class="info-value">{{ reservation.destination }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Départ :</span>
-                        <span class="info-value">{{ reservation.departureAirport }} - {{ reservation.departureTime|date('d/m/Y H:i') }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Arrivée :</span>
-                        <span class="info-value">{{ reservation.arrivalAirport }} - {{ reservation.arrivalTime|date('d/m/Y H:i') }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Nombre de passagers :</span>
-                        <span class="info-value">{{ reservation.numberOfPassengers }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Prix total :</span>
-                        <span class="info-value">{{ reservation.totalPrice|number_format(2) }} €</span>
-                    </div>
-                </div>
-                
-                <div class="info-section">
-                    <h5><i class="fas fa-user"></i> Informations passager</h5>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Nom :</span>
-                        <span class="info-value">{{ reservation.nomClient }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Email :</span>
-                        <span class="info-value">{{ reservation.email }}</span>
-                    </div>
-                    {% if reservation.telephone %}
-                    <div class="info-row">
-                        <span class="info-label">Téléphone :</span>
-                        <span class="info-value">{{ reservation.telephone }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="text-center mt-4">
-                    <a href="{{ path('app_avis_index') }}" class="btn-custom me-2">
-                        <i class="fas fa-star"></i> Donner mon avis
-                    </a>
-                    <a href="{{ path('app_mes_reservations') }}" class="btn-outline-custom">
-                        <i class="fas fa-list"></i> Mes réservations
-                    </a>
-                </div>
-                
-                <hr class="my-4">
-                
-                <div class="text-center">
-                    <small class="text-muted">
-                        <i class="fas fa-envelope"></i> Un email de confirmation a été envoyé à <strong>{{ reservation.email }}</strong>
-                    </small>
-                </div>
-            </div>
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <h1 class="success-title">Réservation confirmée !</h1>
+        <p class="success-message">
+            Merci pour votre confiance. Votre réservation a bien été enregistrée.<br>
+            Vous recevrez un email de confirmation sous 24h.
+        </p>
+        
+        <div class="reservation-number">
+            <span>Numéro de réservation</span><br>
+            <strong>#{{ reservation.id }}</strong>
+        </div>
+        
+        <div>
+            <a href="{{ path('app_mes_reservations') }}" class="btn-action">
+                <i class="fas fa-ticket-alt"></i> Mes réservations
+            </a>
+            <a href="{{ path('app_avis_index') }}" class="btn-action btn-outline">
+                <i class="fas fa-home"></i> Accueil
+            </a>
         </div>
     </div>
 </div>

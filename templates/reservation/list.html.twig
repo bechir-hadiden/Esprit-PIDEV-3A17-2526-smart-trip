@@ -1,256 +1,649 @@
+{# templates/reservation/list.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Mes réservations - SmartTrip{% endblock %}
+{% block title %}VoyageÉlite - Toutes les réservations{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        .reservation-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+        :root {
+            --ink: #0d0d0d;
+            --sand: #f0e8d8;
+            --cream: #faf6ef;
+            --gold: #b8963e;
+            --gold-lt: #d4b06a;
+            --muted: #6b6560;
+            --white: #ffffff;
         }
-        .reservation-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        
+        body {
+            background: var(--cream);
+            font-family: 'DM Sans', sans-serif;
         }
-        .status-badge {
+        
+        .reservations-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 7rem 2rem 4rem;
+        }
+        
+        /* Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .page-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header h1 span {
+            color: var(--gold);
+            font-style: italic;
+        }
+        
+        .page-header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Filter Bar */
+        .filter-bar {
+            background: var(--white);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .filter-group label {
+            display: block;
             font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
         }
-        .status-confirmed { background: #28a745; color: white; }
-        .status-cancelled { background: #dc3545; color: white; }
-        .status-pending { background: #ffc107; color: #333; }
+        
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 0.5px solid rgba(184,150,62,0.3);
+            background: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+        
+        .filter-group input:focus, .filter-group select:focus {
+            border-color: var(--gold);
+        }
+        
+        .btn-reset {
+            background: var(--gold);
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .btn-reset:hover {
+            background: var(--ink);
+            color: var(--white);
+        }
+        
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--white);
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: var(--gold);
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+        
+        /* Reservation Cards */
+        .reservations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .reservation-card {
+            background: var(--white);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+        
+        .reservation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background: var(--ink);
+            color: var(--white);
+            padding: 1rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .flight-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
         .flight-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        .flight-icon i {
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+        
+        .flight-details h4 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .flight-details small {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-confirmed {
+            background: #28a745;
             color: white;
         }
+        
+        .status-cancelled {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .status-completed {
+            background: var(--gold);
+            color: var(--ink);
+        }
+        
+        .card-body {
+            padding: 1.2rem;
+        }
+        
+        .destination {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .destination i {
+            color: var(--gold);
+        }
+        
+        .flight-times {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 0.5px solid rgba(184,150,62,0.2);
+        }
+        
+        .time-point {
+            text-align: center;
+        }
+        
+        .time-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        
+        .time-value {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .flight-line {
+            color: var(--gold);
+            font-size: 0.8rem;
+        }
+        
+        .passenger-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+        
+        .passenger-info span:first-child {
+            color: var(--muted);
+        }
+        
+        .passenger-info span:last-child {
+            font-weight: 500;
+        }
+        
+        .price {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+        
+        .card-footer {
+            padding: 1rem 1.2rem;
+            background: rgba(184,150,62,0.05);
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            background: none;
+            border: 0.5px solid rgba(184,150,62,0.3);
+            padding: 0.5rem 1rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--ink);
+        }
+        
+        .btn-action:hover {
+            background: var(--gold);
+            border-color: var(--gold);
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .btn-success {
+            border-color: #28a745;
+            color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+        
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--white);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gold-lt);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+        
+        .empty-state p {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--gold);
+            color: var(--ink);
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            background: var(--ink);
+            color: var(--white);
+        }
+        
+        /* QR Preview */
         .qr-preview {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
             transition: transform 0.2s;
         }
+        
         .qr-preview:hover {
             transform: scale(1.05);
         }
+        
+        /* Modal */
         .modal-qr {
-            max-width: 300px;
+            max-width: 350px;
         }
-        .filter-bar {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        
+        .modal-content {
+            border-radius: 0;
+            border: none;
         }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
+        
+        .modal-header {
+            background: var(--ink);
+            color: var(--white);
+            border: none;
+            border-radius: 0;
         }
-        .empty-state i {
-            font-size: 64px;
-            color: #dee2e6;
-            margin-bottom: 20px;
+        
+        .modal-header .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .reservations-container { padding: 6rem 1rem 3rem; }
+            .filter-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .reservations-grid { grid-template-columns: 1fr; }
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">
-            <i class="fas fa-ticket-alt me-2 text-primary"></i>Mes réservations
-        </h1>
-        <a href="{{ path('app_avis_index') }}" class="btn btn-outline-primary">
-            <i class="fas fa-search me-1"></i> Nouvelle réservation
-        </a>
+<div class="reservations-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Mes <span>réservations</span></h1>
+        <p>Retrouvez toutes vos réservations de vols</p>
     </div>
-
+    
     <!-- Messages flash -->
     {% for message in app.flashes('success') %}
-        <div class="alert alert-success alert-dismissible fade show">
+        <div class="alert alert-success alert-dismissible fade show" style="background: #28a745; color: white; border: none; border-radius: 0; padding: 1rem; margin-bottom: 1.5rem;">
             <i class="fas fa-check-circle me-2"></i>{{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white float-end" data-bs-dismiss="alert"></button>
         </div>
     {% endfor %}
     
     {% for message in app.flashes('error') %}
-        <div class="alert alert-danger alert-dismissible fade show">
+        <div class="alert alert-danger alert-dismissible fade show" style="background: #dc3545; color: white; border: none; border-radius: 0; padding: 1rem; margin-bottom: 1.5rem;">
             <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white float-end" data-bs-dismiss="alert"></button>
         </div>
     {% endfor %}
-
-    <!-- Barre de filtres -->
+    
+    <!-- Barre de recherche -->
     <div class="filter-bar">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher par destination ou vol...">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Rechercher</label>
+                <input type="text" id="searchInput" placeholder="Destination, vol ou compagnie...">
             </div>
-            <div class="col-md-3">
-                <select id="statusFilter" class="form-select">
+            <div class="filter-group">
+                <label><i class="fas fa-filter"></i> Statut</label>
+                <select id="statusFilter">
                     <option value="all">📊 Tous les statuts</option>
                     <option value="confirmed">✅ Confirmées</option>
                     <option value="cancelled">❌ Annulées</option>
                     <option value="pending">⏳ En attente</option>
+                    <option value="completed">🏁 Terminées</option>
                 </select>
             </div>
-            <div class="col-md-3">
-                <select id="sortFilter" class="form-select">
+            <div class="filter-group">
+                <label><i class="fas fa-sort"></i> Trier par</label>
+                <select id="sortFilter">
                     <option value="date_desc">🕐 Plus récentes</option>
                     <option value="date_asc">🕐 Plus anciennes</option>
                     <option value="price_desc">💰 Prix décroissant</option>
                     <option value="price_asc">💰 Prix croissant</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                    <i class="fas fa-undo-alt me-1"></i> Réinitialiser
-                </button>
-            </div>
+        </div>
+        <div class="text-end mt-3">
+            <button onclick="resetFilters()" class="btn-reset">
+                <i class="fas fa-undo-alt me-1"></i> Réinitialiser
+            </button>
         </div>
     </div>
-
+    
+    <!-- Statistiques -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number">{{ reservations|length }}</div>
+            <div class="stat-label">Total réservations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ reservations|filter(r => r.status == 'confirmed')|length }}</div>
+            <div class="stat-label">Confirmées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ reservations|filter(r => r.status == 'pending')|length }}</div>
+            <div class="stat-label">En attente</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ reservations|filter(r => r.status == 'cancelled')|length }}</div>
+            <div class="stat-label">Annulées</div>
+        </div>
+    </div>
+    
     <!-- Liste des réservations -->
     {% if reservations|length > 0 %}
-        <div class="row" id="reservationsContainer">
+        <div class="reservations-grid" id="reservationsContainer">
             {% for reservation in reservations %}
-            <div class="col-md-6 mb-4 reservation-item" 
+            <div class="reservation-card reservation-item" 
+                 data-id="{{ reservation.id }}"
                  data-status="{{ reservation.status }}"
                  data-destination="{{ reservation.destination|lower }}"
                  data-flight="{{ reservation.flightNumber|lower }}"
+                 data-airline="{{ reservation.airline|lower }}"
                  data-date="{{ reservation.reservationDate.timestamp }}"
                  data-price="{{ reservation.totalPrice }}">
-                <div class="card reservation-card border-0 shadow-sm rounded-3 h-100">
-                    <!-- En-tête avec compagnie et statut -->
-                    <div class="card-header bg-white border-0 pt-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="flight-icon">
-                                    <i class="fas fa-plane"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0">{{ reservation.airline }}</h5>
-                                    <small class="text-muted">{{ reservation.flightNumber }}</small>
-                                </div>
-                            </div>
-                            <span class="status-badge status-{{ reservation.status }}">
-                                {% if reservation.status == 'confirmed' %}
-                                    <i class="fas fa-check-circle me-1"></i> Confirmé
-                                {% elseif reservation.status == 'cancelled' %}
-                                    <i class="fas fa-times-circle me-1"></i> Annulé
-                                {% else %}
-                                    <i class="fas fa-clock me-1"></i> En attente
-                                {% endif %}
-                            </span>
+                
+                <div class="card-header">
+                    <div class="flight-info">
+                        <div class="flight-icon">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                        <div class="flight-details">
+                            <h4 class="mb-0">{{ reservation.airline }}</h4>
+                            <small>{{ reservation.flightNumber }}</small>
                         </div>
                     </div>
-
-                    <div class="card-body">
-                        <!-- Destination -->
-                        <h4 class="mb-3">
-                            <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                            {{ reservation.destination }}
-                        </h4>
-
-                        <!-- Informations vol -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-6">
-                                <div class="text-center p-2 bg-light rounded">
-                                    <small class="text-muted">Départ</small>
-                                    <div class="fw-bold">{{ reservation.departureAirport }}</div>
-                                    <div class="small">{{ reservation.departureTime|date('d/m/Y H:i') }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-center p-2 bg-light rounded">
-                                    <small class="text-muted">Arrivée</small>
-                                    <div class="fw-bold">{{ reservation.arrivalAirport }}</div>
-                                    <div class="small">{{ reservation.arrivalTime|date('d/m/Y H:i') }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Passager et prix -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <small class="text-muted">Passager</small>
-                                <div class="fw-bold">{{ reservation.nomClient }}</div>
-                                <small class="text-muted">{{ reservation.email }}</small>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted">Prix total</small>
-                                <div class="h5 text-primary mb-0">{{ reservation.totalPrice }} €</div>
-                                <small>{{ reservation.numberOfPassengers }} passager(s)</small>
-                            </div>
-                        </div>
-
-                        <!-- QR Code preview (si confirmé) -->
-                        {% if reservation.status == 'confirmed' and reservation.boardingPassFile %}
-                        <div class="text-center mb-3">
-                            <img src="{{ asset('uploads/boarding_passes/' ~ reservation.boardingPassFile) }}" 
-                                 class="qr-preview" 
-                                 alt="QR Code"
-                                 data-bs-toggle="modal" 
-                                 data-bs-target="#qrModal{{ reservation.id }}">
-                        </div>
+                    <span class="status-badge status-{{ reservation.status }}">
+                        {% if reservation.status == 'confirmed' %}
+                            <i class="fas fa-check-circle me-1"></i> Confirmé
+                        {% elseif reservation.status == 'cancelled' %}
+                            <i class="fas fa-times-circle me-1"></i> Annulé
+                        {% elseif reservation.status == 'pending' %}
+                            <i class="fas fa-clock me-1"></i> En attente
+                        {% else %}
+                            <i class="fas fa-flag-checkered me-1"></i> Terminé
                         {% endif %}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="destination">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ reservation.destination }}
                     </div>
-
-                    <!-- Boutons d'action -->
-                    <div class="card-footer bg-transparent border-0 pb-3">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="{{ path('app_reservation_show', {'id': reservation.id}) }}" 
-                               class="btn btn-sm btn-outline-primary flex-grow-1">
-                                <i class="fas fa-eye me-1"></i> Détails
-                            </a>
-                            
-                            {% if reservation.status == 'confirmed' %}
-                                <a href="{{ path('app_reservation_boarding_pass', {'id': reservation.id}) }}" 
-                                   target="_blank" class="btn btn-sm btn-success flex-grow-1">
-                                    <i class="fas fa-ticket-alt me-1"></i> Billet
-                                </a>
-                                
-                                {% if not reservation.boardingPassSent %}
-                                <form method="post" action="{{ path('app_reservation_send_boarding_pass', {'id': reservation.id}) }}" 
-                                      style="display: inline; flex-grow: 1;">
-                                    <button class="btn btn-sm btn-info w-100" onclick="return confirm('Envoyer le billet par email ?')">
-                                        <i class="fas fa-envelope me-1"></i> Email
-                                    </button>
-                                </form>
-                                {% else %}
-                                <button class="btn btn-sm btn-secondary w-100" disabled>
-                                    <i class="fas fa-check me-1"></i> Envoyé
-                                </button>
-                                {% endif %}
-                                
-                                {% if reservation.cancellable %}
-                                <form method="post" action="{{ path('app_reservation_cancel', {'id': reservation.id}) }}" 
-                                      style="display: inline; flex-grow: 1;">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ reservation.id) }}">
-                                    <button class="btn btn-sm btn-danger w-100" onclick="return confirm('Annuler cette réservation ?')">
-                                        <i class="fas fa-times me-1"></i> Annuler
-                                    </button>
-                                </form>
-                                {% endif %}
-                            {% endif %}
+                    
+                    <div class="flight-times">
+                        <div class="time-point">
+                            <div class="time-label">Départ</div>
+                            <div class="time-value">{{ reservation.departureTime|date('H:i') }}</div>
+                            <small class="text-muted">{{ reservation.departureAirport }}</small>
+                        </div>
+                        <div class="flight-line">
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                        </div>
+                        <div class="time-point">
+                            <div class="time-label">Arrivée</div>
+                            <div class="time-value">{{ reservation.arrivalTime|date('H:i') }}</div>
+                            <small class="text-muted">{{ reservation.arrivalAirport }}</small>
                         </div>
                     </div>
+                    
+                    <div class="passenger-info">
+                        <span><i class="fas fa-user"></i> Passager</span>
+                        <span>{{ reservation.nomClient }}</span>
+                    </div>
+                    
+                    <div class="passenger-info">
+                        <span><i class="fas fa-users"></i> Nombre</span>
+                        <span>{{ reservation.numberOfPassengers }} personne(s)</span>
+                    </div>
+                    
+                    <div class="passenger-info">
+                        <span><i class="fas fa-calendar"></i> Réservation</span>
+                        <span>{{ reservation.reservationDate|date('d/m/Y') }}</span>
+                    </div>
+                    
+                    <div class="passenger-info">
+                        <span><i class="fas fa-tag"></i> Prix total</span>
+                        <span class="price">{{ reservation.totalPrice }} €</span>
+                    </div>
+                    
+                    <!-- QR Code preview -->
+                    {% if reservation.status == 'confirmed' and reservation.boardingPassFile %}
+                    <div class="text-center mt-3">
+                        <img src="{{ asset('uploads/boarding_passes/' ~ reservation.boardingPassFile) }}" 
+                             class="qr-preview" 
+                             alt="QR Code"
+                             data-bs-toggle="modal" 
+                             data-bs-target="#qrModal{{ reservation.id }}">
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <a href="{{ path('app_reservation_show', {'id': reservation.id}) }}" class="btn-action">
+                        <i class="fas fa-eye"></i> Détails
+                    </a>
+                    
+                    {% if reservation.status == 'confirmed' %}
+                        <a href="{{ path('app_reservation_boarding_pass', {'id': reservation.id}) }}" 
+                           target="_blank" class="btn-action btn-success">
+                            <i class="fas fa-ticket-alt"></i> Billet
+                        </a>
+                        
+                        {% if not reservation.boardingPassSent %}
+                        <form method="post" action="{{ path('app_reservation_send_boarding_pass', {'id': reservation.id}) }}" style="display: inline;">
+                            <button class="btn-action" onclick="return confirm('Envoyer le billet par email ?')">
+                                <i class="fas fa-envelope"></i> Email
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="btn-action btn-disabled" disabled>
+                            <i class="fas fa-check"></i> Envoyé
+                        </button>
+                        {% endif %}
+                        
+                        {% if reservation.cancellable %}
+                        <form method="post" action="{{ path('app_reservation_cancel', {'id': reservation.id}) }}" style="display: inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ reservation.id) }}">
+                            <button class="btn-action btn-danger" onclick="return confirm('Annuler cette réservation ?')">
+                                <i class="fas fa-times"></i> Annuler
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
-
+            
             <!-- Modal QR Code -->
             {% if reservation.status == 'confirmed' and reservation.boardingPassFile %}
             <div class="modal fade" id="qrModal{{ reservation.id }}" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered modal-qr">
                     <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
+                        <div class="modal-header">
                             <h5 class="modal-title">
                                 <i class="fas fa-qrcode me-2"></i>QR Code - {{ reservation.flightNumber }}
                             </h5>
@@ -260,13 +653,13 @@
                             <img src="{{ asset('uploads/boarding_passes/' ~ reservation.boardingPassFile) }}" 
                                  alt="QR Code" class="img-fluid" style="max-width: 250px;">
                             <p class="mt-3 mb-0 small text-muted">
-                                Présentez ce code à l'embarquement
+                                <i class="fas fa-mobile-alt"></i> Présentez ce code à l'embarquement
                             </p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            <button type="button" class="btn-action" data-bs-dismiss="modal">Fermer</button>
                             <a href="{{ path('app_reservation_boarding_pass', {'id': reservation.id}) }}" 
-                               target="_blank" class="btn btn-primary">
+                               target="_blank" class="btn-action btn-success">
                                 <i class="fas fa-print me-1"></i> Imprimer
                             </a>
                         </div>
@@ -281,8 +674,8 @@
         <div class="empty-state">
             <i class="fas fa-ticket-alt"></i>
             <h3>Aucune réservation</h3>
-            <p class="text-muted">Vous n'avez pas encore effectué de réservation.</p>
-            <a href="{{ path('app_avis_index') }}" class="btn btn-primary">
+            <p>Vous n'avez pas encore effectué de réservation.</p>
+            <a href="{{ path('app_avis_index') }}" class="btn-primary">
                 <i class="fas fa-search me-2"></i> Découvrir des voyages
             </a>
         </div>
@@ -302,9 +695,13 @@
         const filtered = items.filter(item => {
             const destination = item.dataset.destination;
             const flight = item.dataset.flight;
+            const airline = item.dataset.airline;
             const status = item.dataset.status;
             
-            const matchesSearch = searchTerm === '' || destination.includes(searchTerm) || flight.includes(searchTerm);
+            const matchesSearch = searchTerm === '' || 
+                destination.includes(searchTerm) || 
+                flight.includes(searchTerm) ||
+                airline.includes(searchTerm);
             const matchesStatus = statusFilter === 'all' || status === statusFilter;
             
             return matchesSearch && matchesStatus;
@@ -334,11 +731,10 @@
         // Afficher message si aucun résultat
         if (filtered.length === 0) {
             container.innerHTML = `
-                <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Aucune réservation ne correspond à vos critères.
-                    </div>
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <i class="fas fa-search"></i>
+                    <h3>Aucun résultat</h3>
+                    <p>Aucune réservation ne correspond à vos critères.</p>
                 </div>
             `;
         }
