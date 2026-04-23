@@ -1,9 +1,7 @@
 SmartTrip – Travel Agency Web Application
-
 Overview
 This project was developed as part of the PDEV – 3rd Year Engineering Program at Esprit School of Engineering (Academic Year 2025–2026).
 It is a modern travel agency management web application built with Symfony, allowing users to browse destinations, book trips, manage buses and passengers, and track reservations in real time.
-
 Main Features
 
 Modern and responsive interface using Twig and CSS3
