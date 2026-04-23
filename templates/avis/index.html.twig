@@ -1015,6 +1015,40 @@
 {% endblock %}
 
 {% block body %}
+    {# --- BLOC NOTIFICATIONS FLASH --- #}
+    <div class="voyage-notifications" style="position: fixed; top: 110px; right: 30px; z-index: 10000; width: 350px;">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert shadow-lg fade show" role="alert" 
+                     style="background: var(--chat-bg); color: var(--cream); border: 0.5px solid var(--gold); border-radius: 0; margin-bottom: 15px; padding: 1.2rem; position: relative; backdrop-filter: blur(10px);">
+                    
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="color: var(--gold); font-size: 1.2rem;">
+                            {% if label == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% else %}
+                                <i class="fas fa-hourglass-half"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 4px;">
+                                {{ label == 'success' ? 'Confirmation' : 'Information' }}
+                            </strong>
+                            <p style="margin: 0; font-size: 0.85rem; line-height: 1.4; color: rgba(250, 246, 239, 0.9);">
+                                {{ message }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" 
+                            style="position: absolute; top: 10px; right: 10px; font-size: 0.6rem; opacity: 0.5; border: none; background: none; color: white; cursor: pointer;">
+                        ✕
+                    </button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    {# --- FIN DU BLOC NOTIFICATIONS --- #}
 <div class="voyage-container">
     <!-- NAVIGATION -->
     <nav class="voyage-nav">
