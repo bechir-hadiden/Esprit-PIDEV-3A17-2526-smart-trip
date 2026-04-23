@@ -78,6 +78,26 @@
     .btn-danger-sm { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); padding:.4rem .9rem; border-radius:8px; cursor:pointer; font-size:.78rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:.3rem; transition:all .3s; }
     .btn-danger-sm:hover { background:rgba(220,38,38,0.2); }
 
+    .btn-ai-nav {
+      background: rgba(201,168,76,0.1);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: .5rem 1.2rem;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: .85rem;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .btn-ai-nav:hover {
+      background: var(--gold);
+      color: var(--navy);
+      box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+    }
+
     /* ── SECTIONS ── */
     section { padding:5rem 5%; }
     .section-label { display:inline-block; color:var(--gold); font-size:.72rem; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:.75rem; }
@@ -209,6 +229,9 @@
   <ul class="nav-links">
     <li><a href="{{ path('destination_index') }}">Destinations</a></li>
     <li><a href="{{ path('voyage_index') }}">Voyages</a></li>
+    <li><a href="{{ path('transport_index') }}">Transports</a></li>
+    <li><a href="{{ path('user_paiement_index') }}">Mes Paiements</a></li>
+    <li><a href="{{ path('admin_transport_index') }}" style="color:var(--gold); font-weight:700;"><i class="fas fa-shield-alt"></i> Administration</a></li>
     <li><a href="{{ path('app_home') }}#about">À propos</a></li>
     <li><a href="{{ path('app_home') }}#contact" class="nav-cta">Réserver</a></li>
   </ul>
@@ -249,6 +272,15 @@
       <ul>
         <li><a href="{{ path('voyage_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Tous les voyages</a></li>
         <li><a href="{{ path('voyage_new') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Créer un voyage</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Transports</h4>
+      <ul>
+        <li><a href="{{ path('transport_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Réserver un transport</a></li>
+        <li><a href="{{ path('user_paiement_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Mes Paiements</a></li>
+        <li><a href="{{ path('admin_paiement_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Gestion Paiements (Admin)</a></li>
+        <li><a href="{{ path('admin_transport_index') }}"><i class="fas fa-chevron-right" style="font-size:.6rem"></i> Gestion Transport (Admin)</a></li>
       </ul>
     </div>
     <div class="footer-col">

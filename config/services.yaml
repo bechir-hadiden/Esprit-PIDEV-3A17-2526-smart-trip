@@ -27,3 +27,7 @@ services:
     App\Service\N8nItineraireService:
         arguments:
             $webhookUrl: '%env(N8N_WEBHOOK_URL)%'
+
+    App\Service\AiTransportService:
+        arguments:
+            $apiKey: '%env(ANTHROPIC_API_KEY)%'
