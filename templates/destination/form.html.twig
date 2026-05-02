@@ -1,0 +1,274 @@
+{% extends 'base_dark.html.twig' %}
+{% block title %}{{ mode == 'new' ? 'Nouvelle destination' : 'Modifier ' ~ destination.nom }}{% endblock %}
+
+{% block body %}
+
+{# ── PAGE HERO ── #}
+<div style="background:var(--navy);padding:7rem 5% 3rem;border-bottom:1px solid rgba(201,168,76,0.15);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <span class="section-label">{{ mode == 'new' ? 'Créer' : 'Modifier' }}</span>
+      <h1 class="section-title light">
+        {{ mode == 'new' ? 'Nouvelle Destination' : destination.nom }}
+      </h1>
+    </div>
+    <a href="{{ path('admin_destination_index') }}" class="btn-outline-light" style="padding:.6rem 1.4rem;font-size:.85rem;">
+      <i class="fas fa-arrow-left"></i> Retour
+    </a>
+  </div>
+</div>
+
+{# ── FORMULAIRE ── #}
+<div style="padding:3rem 5%;background:var(--cream);">
+
+  {{ form_start(form, {attr: {novalidate: 'novalidate', enctype: 'multipart/form-data'}}) }}
+
+  <div style="max-width:800px;display:flex;flex-direction:column;gap:1.4rem;">
+
+    {# ── Infos de base ── #}
+    <div style="background:var(--white);border-radius:14px;padding:1.8rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);border-top:3px solid var(--gold);">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:1.4rem;display:flex;align-items:center;gap:.5rem;">
+        <i class="fas fa-map-marker-alt" style="color:var(--gold);"></i> Informations générales
+      </h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div>
+          {{ form_label(form.nom, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+          {{ form_widget(form.nom, {attr: {style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;', onfocus: "this.style.borderColor='var(--gold)'", onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"}}) }}
+          {{ form_errors(form.nom) }}
+        </div>
+        <div>
+          {{ form_label(form.pays, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+          {{ form_widget(form.pays, {attr: {style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;', onfocus: "this.style.borderColor='var(--gold)'", onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"}}) }}
+          {{ form_errors(form.pays) }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          {{ form_label(form.codeIata, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+          {{ form_widget(form.codeIata, {attr: {style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;', onfocus: "this.style.borderColor='var(--gold)'", onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"}}) }}
+          {{ form_errors(form.codeIata) }}
+        </div>
+        <div>
+          {{ form_label(form.order, null, {label_attr: {style: 'display:block;font-size:.75rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;'}}) }}
+          {{ form_widget(form.order, {attr: {style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;', onfocus: "this.style.borderColor='var(--gold)'", onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"}}) }}
+          {{ form_errors(form.order) }}
+        </div>
+      </div>
+    </div>
+
+    {# ── Description ── #}
+    <div style="background:var(--white);border-radius:14px;padding:1.8rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;">
+        <i class="fas fa-align-left" style="color:var(--gold);"></i> Description
+      </h3>
+      {{ form_widget(form.description, {attr: {style: 'width:100%;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;min-height:110px;resize:vertical;', onfocus: "this.style.borderColor='var(--gold)'", onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"}}) }}
+      {{ form_errors(form.description) }}
+    </div>
+
+    {# ── IMAGES ── #}
+    <div style="background:var(--white);border-radius:14px;padding:1.8rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;">
+        <i class="fas fa-images" style="color:var(--gold);"></i> Photos
+      </h3>
+
+      <div id="dropzone"
+           onclick="document.getElementById('imageFilesInput').click()"
+           style="border:2px dashed rgba(201,168,76,0.4);border-radius:12px;padding:2rem;text-align:center;background:rgba(201,168,76,0.03);cursor:pointer;transition:all .3s;"
+           onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(201,168,76,0.07)'"
+           onmouseout="this.style.borderColor='rgba(201,168,76,0.4)';this.style.background='rgba(201,168,76,0.03)'">
+        <div style="font-size:2.2rem;margin-bottom:.6rem;">🖼️</div>
+        <div id="dropzoneText" style="font-weight:600;color:var(--navy);font-size:.9rem;">
+          Cliquez pour choisir vos images
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;">
+          JPG, PNG, WEBP — max 3 Mo — sélection multiple possible
+        </div>
+      </div>
+
+      <input type="file"
+             id="imageFilesInput"
+             name="destination[imageFiles][]"
+             accept="image/*"
+             multiple
+             style="display:none;"
+             onchange="handleFileChange(this)">
+
+      <div id="previewGrid" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;">
+        {% for img in destination.allImages %}
+          <div style="position:relative;">
+            <img src="{{ img }}"
+                 style="width:80px;height:60px;object-fit:cover;border-radius:8px;border:2px solid var(--gold);">
+            <div style="position:absolute;top:-4px;right:-4px;background:var(--gold);color:var(--navy);
+                        border-radius:50%;width:18px;height:18px;font-size:.6rem;
+                        display:flex;align-items:center;justify-content:center;font-weight:700;">✓</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if destination.allImages|length > 0 %}
+        <p style="font-size:.75rem;color:var(--muted);margin-top:.5rem;">
+          {{ destination.allImages|length }} image(s) existante(s) — sélectionnez de nouvelles pour en ajouter
+        </p>
+      {% endif %}
+    </div>
+
+    {# ── YouTube ── #}
+    <div style="background:var(--white);border-radius:14px;padding:1.8rem;box-shadow:0 2px 12px rgba(13,27,42,0.06);">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--navy);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem;">
+        <i class="fab fa-youtube" style="color:#ff0000;"></i> Vidéo YouTube
+      </h3>
+
+      <div style="display:flex;gap:.75rem;margin-bottom:1rem;">
+        {{ form_widget(form.youtubeSearch, {attr: {
+          placeholder: 'Ex: Paris city tour 4K...',
+          id: 'youtubeSearch',
+          style: 'flex:1;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;outline:none;transition:border-color .3s;',
+          onfocus: "this.style.borderColor='var(--gold)'",
+          onblur: "this.style.borderColor='rgba(13,27,42,0.15)'"
+        }}) }}
+        <button type="button" onclick="searchYoutube()" class="btn-gold">
+          <i class="fas fa-search"></i> Chercher
+        </button>
+      </div>
+
+      <div id="youtubeResults" style="display:none;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;"></div>
+
+      <div id="selectedVideo" style="display:none;margin-bottom:1rem;">
+        <iframe id="youtubePlayer" width="100%" height="200"
+                style="border-radius:10px;border:2px solid var(--gold);" allowfullscreen></iframe>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        {{ form_widget(form.videoUrl, {attr: {
+          id: 'videoUrlField',
+          readonly: 'readonly',
+          style: 'flex:1;padding:.75rem 1rem;border:1px solid rgba(13,27,42,0.15);border-radius:10px;font-family:inherit;font-size:.875rem;background:rgba(13,27,42,0.03);color:var(--muted);',
+          placeholder: 'ID YouTube sera affiché ici'
+        }}) }}
+        <button type="button" onclick="clearVideo()" class="btn-danger-sm">
+          <i class="fas fa-times"></i> Vider
+        </button>
+      </div>
+      <small style="color:var(--muted);font-size:.72rem;display:block;margin-top:.4rem;">
+        L'ID YouTube est sauvegardé automatiquement quand vous sélectionnez une vidéo
+      </small>
+    </div>
+
+    {# ── Actions ── #}
+    <div style="display:flex;gap:1rem;justify-content:flex-end;padding-bottom:2rem;">
+      <a href="{{ path('admin_destination_index') }}" class="btn-navy">Annuler</a>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-{{ mode == 'new' ? 'plus' : 'save' }}"></i>
+        {{ mode == 'new' ? 'Créer la destination' : 'Sauvegarder' }}
+      </button>
+    </div>
+
+  </div>
+
+  {{ form_end(form) }}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+const YOUTUBE_SEARCH_URL = '{{ path('admin_destination_youtube_search') }}';
+
+function handleFileChange(input) {
+  const grid = document.getElementById('previewGrid');
+  grid.querySelectorAll('.new-preview').forEach(el => el.remove());
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  Array.from(files).forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const div = document.createElement('div');
+      div.className = 'new-preview';
+      div.style.position = 'relative';
+      div.innerHTML = `
+        <img src="${ev.target.result}"
+             style="width:80px;height:60px;object-fit:cover;border-radius:8px;border:2px solid #4ade80;">
+        <div style="position:absolute;top:-4px;right:-4px;background:#4ade80;color:#fff;border-radius:50%;
+                    width:18px;height:18px;font-size:.6rem;display:flex;align-items:center;
+                    justify-content:center;font-weight:700;">${i + 1}</div>
+      `;
+      grid.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('dropzoneText').textContent = files.length + ' image(s) sélectionnée(s) ✅';
+  document.getElementById('dropzone').style.borderColor = '#4ade80';
+}
+
+async function searchYoutube() {
+  const q = document.getElementById('youtubeSearch').value.trim();
+  if (!q) return;
+  const btn = document.querySelector('button[onclick="searchYoutube()"]');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recherche...';
+  btn.disabled = true;
+  try {
+    const res  = await fetch(YOUTUBE_SEARCH_URL + '?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    const container = document.getElementById('youtubeResults');
+    container.innerHTML = '';
+    container.style.display = 'grid';
+    if (!data.length) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:.82rem;grid-column:1/-1;">Aucun résultat.</p>';
+      return;
+    }
+    data.forEach(video => {
+      const div = document.createElement('div');
+      div.style.cssText = 'cursor:pointer;border-radius:10px;overflow:hidden;border:2px solid transparent;transition:all .2s;background:var(--cream);';
+      div.innerHTML = `
+        <img src="${video.thumbnail}" style="width:100%;height:80px;object-fit:cover;">
+        <div style="padding:.5rem;">
+          <div style="font-size:.7rem;font-weight:600;color:var(--navy);line-height:1.3;
+                      overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
+            ${video.title}
+          </div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem;">${video.channel ?? ''}</div>
+        </div>
+      `;
+      div.onmouseover = () => div.style.borderColor = 'var(--gold)';
+      div.onmouseout  = () => {
+        if (document.getElementById('videoUrlField').value !== video.videoId)
+          div.style.borderColor = 'transparent';
+      };
+      div.onclick = () => selectVideo(video.videoId, div);
+      container.appendChild(div);
+    });
+  } catch(e) {
+    alert('Erreur lors de la recherche YouTube.');
+  } finally {
+    btn.innerHTML = '<i class="fas fa-search"></i> Chercher';
+    btn.disabled = false;
+  }
+}
+
+function selectVideo(videoId, el) {
+  document.querySelectorAll('#youtubeResults > div').forEach(d => d.style.borderColor = 'transparent');
+  el.style.borderColor = 'var(--gold)';
+  document.getElementById('videoUrlField').value = videoId;
+  document.getElementById('youtubePlayer').src = `https://www.youtube.com/embed/${videoId}`;
+  document.getElementById('selectedVideo').style.display = 'block';
+}
+
+function clearVideo() {
+  document.getElementById('videoUrlField').value = '';
+  document.getElementById('youtubePlayer').src   = '';
+  document.getElementById('selectedVideo').style.display  = 'none';
+  document.getElementById('youtubeResults').style.display = 'none';
+  document.getElementById('youtubeSearch').value = '';
+}
+
+window.addEventListener('load', () => {
+  const videoId = document.getElementById('videoUrlField').value.trim();
+  if (videoId) {
+    document.getElementById('youtubePlayer').src = `https://www.youtube.com/embed/${videoId}`;
+    document.getElementById('selectedVideo').style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

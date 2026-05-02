@@ -1,28 +1,6 @@
-# config/packages/security.yaml
-security:
-    password_hashers:
-        App\Entity\User: 'auto'
+twig:
+    file_name_pattern: '*.twig'
 
-    providers:
-        app_user_provider:
-            entity:
-                class: App\Entity\User
-                property: email
-
-    firewalls:
-        dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
-        
-        main:
-            lazy: true
-            provider: app_user_provider
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                default_target_path: admin_dashboard
-            logout:
-                path: app_logout
-                target: app_avis_index
-
-    
+when@test:
+    twig:
+        strict_variables: true

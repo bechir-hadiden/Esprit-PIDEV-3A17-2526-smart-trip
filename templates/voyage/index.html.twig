@@ -1,0 +1,141 @@
+{% extends 'base_dark.html.twig' %}
+{% block title %}Voyages – SmartTrip{% endblock %}
+
+{% block body %}
+
+<div style="background:var(--navy);padding:7rem 5% 3rem;border-bottom:1px solid rgba(201,168,76,0.15);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <span class="section-label">Nos Formules</span>
+      <h1 class="section-title light">Tous les Voyages</h1>
+      <p style="color:rgba(255,255,255,0.55);font-size:.95rem;line-height:1.75;margin-bottom:2rem;">
+        Découvrez nos voyages et packages soigneusement sélectionnés.
+      </p>
+      <a href="{{ path('admin_voyage_new') }}" class="btn-gold">
+        <i class="fas fa-plus"></i> Nouveau voyage
+      </a>
+    </div>
+  </div>
+</div>
+
+{# ── FILTRES ── #}
+<div style="background:var(--cream);padding:1.8rem 5%;border-bottom:1px solid rgba(13,27,42,0.08);display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+
+  <form method="GET" style="display:flex;gap:.75rem;flex:1;min-width:240px;">
+    <div style="flex:1;position:relative;">
+      <i class="fas fa-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.875rem;"></i>
+      <input type="text" name="q" value="{{ query ?? '' }}"
+             placeholder="Rechercher un voyage, destination..."
+             style="width:100%;padding:.7rem 1rem .7rem 2.75rem;border:1px solid rgba(13,27,42,0.15);border-radius:50px;font-family:inherit;font-size:.875rem;outline:none;background:var(--white);">
+    </div>
+    <button type="submit" class="btn-primary" style="padding:.7rem 1.4rem;font-size:.875rem;">
+      Chercher
+    </button>
+
+    {% if query %}
+      <a href="{{ path('admin_voyage_index') }}" class="btn-navy" style="padding:.7rem 1rem;">
+        <i class="fas fa-times"></i>
+      </a>
+    {% endif %}
+  </form>
+
+  <form method="GET">
+    <select name="destination" onchange="this.form.submit()"
+            style="padding:.7rem 1.2rem;border:1px solid rgba(13,27,42,0.15);border-radius:50px;background:var(--white);">
+      <option value="">Toutes les destinations</option>
+      {% for dest in destinations %}
+        <option value="{{ dest.id }}"
+          {{ filtreDestId is defined and filtreDestId == dest.id ? 'selected' }}>
+          {{ dest.nom }} — {{ dest.pays }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+
+</div>
+
+{# ── LISTE ── #}
+<div style="padding:3rem 5%;background:var(--cream);min-height:60vh;">
+
+  {% if voyages is empty %}
+
+    <div style="text-align:center;padding:5rem 2rem;">
+      <div style="font-size:4rem;margin-bottom:1rem;">✈️</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--navy);">
+        Aucun voyage disponible
+      </h3>
+    </div>
+
+  {% else %}
+
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:1.8rem;">
+      <i class="fas fa-plane" style="color:var(--gold);"></i>
+      {{ voyages.getTotalItemCount }} voyage(s) trouvé(s)
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.4rem;">
+
+      {% for voyage in voyages %}
+
+        {% set cardImg =
+          voyage.imagePath ??
+          (voyage.destinationRel and voyage.destinationRel.firstImage ? voyage.destinationRel.firstImage : null)
+        %}
+
+        <div style="background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(13,27,42,0.08);">
+
+          <div style="height:200px;position:relative;background:var(--navy);">
+
+            {% if cardImg %}
+              <img src="{{ cardImg }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+              <div style="display:flex;justify-content:center;align-items:center;height:100%;font-size:3rem;">
+                ✈️
+              </div>
+            {% endif %}
+
+            <div style="position:absolute;bottom:10px;left:10px;background:var(--gold);padding:.3rem .7rem;border-radius:20px;">
+              {{ voyage.prix|number_format(0,',',' ') }} TND
+            </div>
+
+            <div style="position:absolute;top:10px;right:10px;background:var(--gold);padding:.2rem .6rem;border-radius:20px;">
+              {{ voyage.dureeJours }} JOURS
+            </div>
+
+          </div>
+
+          <div style="padding:1rem;">
+            <h3>{{ voyage.destination }}</h3>
+
+            <p style="font-size:.8rem;color:gray;">
+              {{ voyage.dateDebut|date('d/m/Y') }} → {{ voyage.dateFin|date('d/m/Y') }}
+            </p>
+
+            {% if voyage.description %}
+              <p style="font-size:.8rem;">
+                {{ voyage.description|slice(0,80) }}...
+              </p>
+            {% endif %}
+          </div>
+
+        </div>
+
+      {% endfor %}
+
+    </div>
+
+    {# ── PAGINATION (IMPORTANT) ── #}
+    <div style="margin-top:2rem;display:flex;justify-content:center;">
+      {{ knp_pagination_render(voyages, null, {
+        'query': {
+          'q': query,
+          'destination': filtreDestId
+        }
+      }) }}
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}
